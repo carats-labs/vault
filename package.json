@@ -1,0 +1,29 @@
+{
+  "name": "@carats/core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Ufuk Bakan",
+    "email": "println.ufukbakan@gmail.com",
+    "url": "https://www.linkedin.com/in/ufuk-bakan"
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.3",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
