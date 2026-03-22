@@ -12,7 +12,7 @@
     "jjsx": "^3.3.0"
   },
   "peerDependencies": {
-    "@carats/core": "^0.0.1",
+    "@carats/core": "^0.0.2",
     "@carats/url": "^0.0.1"
   },
   "publishConfig": {

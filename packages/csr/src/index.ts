@@ -1,22 +1,17 @@
 import { transpile } from 'jjsx';
 import { readFileSync } from 'fs';
-import { CaratsComponent } from '@carats/core';
+import { CaratsComponent, getConfig } from '@carats/core';
 import { matchRoute, parseUrl, qs, replaceParams } from '@carats/url';
 
 interface PageComponentModule {
   default: CaratsComponent
 }
 
-const ROUTE_FILE = './_PUBLIC_ROUTES.env';
-const ROUTES = readFileSync(ROUTE_FILE, 'utf-8')
-  .split('\n')
-  .map(l => l.trim())
-  .reduce<Record<string, Promise<CaratsComponent>>>((acc, l) => {
-    const [route, pageComponentName] = l.split('=').map(s => s.trim());
-    const component = import(`../client/pages/${pageComponentName}`) satisfies Promise<PageComponentModule>;
-    acc[route] = component;
-    return acc;
-  }, {})
+const {
+  routes
+} = await getConfig();
+
+const publicRoutes = Object.fromEntries(Object.entries(routes).filter(([_, route]) => route.public));
 
 interface PageComponentResult {
   component: CaratsComponent<any>;
@@ -24,7 +19,8 @@ interface PageComponentResult {
 }
 
 export async function getPageComponent(path: string): Promise<PageComponentResult> {
-  for (const [routePath, component] of Object.entries(ROUTES)) {
+  for (const routePath in publicRoutes) {
+    const { component } = publicRoutes[routePath];
     const matchedParams = matchRoute(routePath, path);
     if (matchedParams) {
       const c = await component;
