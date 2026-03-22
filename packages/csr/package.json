@@ -1,13 +1,7 @@
 {
   "name": "@carats/csr",
   "version": "0.0.1",
-  "description": "CSR module for Carats",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsc"
-  },
   "dependencies": {
     "jjsx": "^3.3.0"
   },
@@ -15,7 +9,15 @@
     "@carats/core": "^0.0.2",
     "@carats/url": "^0.0.1"
   },
+  "description": "CSR module for Carats",
+  "files": ["dist"],
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsup src/index.tsx --config ../../tsup.config.ts"
+  },
+  "type": "module",
+  "types": "dist/index.d.ts"
 }

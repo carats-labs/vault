@@ -1,42 +1,69 @@
 import { Router } from 'express'
 import { ViteDevServer } from 'vite'
+import { findClosest, getConfig } from '@carats/core'
 import fs from 'fs'
 
-const isProduction = process.env.NODE_ENV === 'production'
-const base = process.env.BASE || '/'
+type CaratsRender = (url: string, req: any) => Promise<{
+  html: string;
+  head: string;
+}>
 
-const router = Router()
+const isProduction = process.env.NODE_ENV === 'production'
+
+const router: Router = Router()
 
 const templateHtml = isProduction
   ? fs.readFileSync('./dist/client/index.html', 'utf-8')
   : ''
 
-// Add Vite or respective production middlewares
-/** @type {import('vite').ViteDevServer | undefined} */
+async function getServerEntryAndTemplate(url: string) {
+  if (isProduction) {
+    const productionServerEntry = findClosest('dist/server/entrypoint.js')
+    if (!productionServerEntry) {
+      throw new Error('Production server entry not found')
+    }
+    const serverEntry = await import(productionServerEntry)
+    return { serverEntry, template: templateHtml }
+  } else {
+    const localServerEntry = findClosest('src/server/entrypoint.ts')
+    if (!localServerEntry) {
+      throw new Error('Local server entry not found')
+    }
+    const serverEntry = await vite.ssrLoadModule(localServerEntry)
+    const templateFile = findClosest('src/client/index.html')
+    if (!templateFile) {
+      throw new Error('Template file not found')
+    }
+    const templateContents = fs.readFileSync(templateFile, 'utf-8')
+    const template = await vite.transformIndexHtml(url, templateContents)
+    return { serverEntry, template }
+  }
+}
+
 let vite: ViteDevServer
-if (!isProduction) {
-  const { createServer } = await import('vite')
-  vite = await createServer({
-    server: { middlewareMode: true },
-    appType: 'custom',
-    base,
-    root: './src/client',
-    publicDir: './public',
-  })
-  router.use(vite.middlewares)
-} else {
-  const compression = (await import('compression')).default
-  const sirv = (await import('sirv')).default
-  router.use(compression())
-  router.use(base, sirv('./dist/client', { extensions: [] }))
+async function initVite() {
+  const conf = await getConfig();
+  if (!isProduction) {
+    const { createServer } = await import('vite')
+    vite = await createServer({
+      server: { middlewareMode: true },
+      appType: 'custom',
+      base: conf.server.basePath,
+      root: './src/client',
+      publicDir: './public',
+    })
+    router.use(vite.middlewares)
+  } else {
+    const compression = (await import('compression')).default
+    const sirv = (await import('sirv')).default
+    router.use(compression())
+    router.use(conf.server.basePath, sirv('./dist/client', { extensions: [] }))
+  }
 }
 
 router.use('/api*splat', async (req, res) => {
   try {
-    const serverEntry = isProduction
-      // @ts-ignore
-      ? (await import('./dist/server/entrypoint.js'))
-      : (await vite.ssrLoadModule('./src/server/entrypoint.ts'))
+    const { serverEntry } = await getServerEntryAndTemplate(req.originalUrl)
     const getApiData = serverEntry.getApiData
     const data = await getApiData(req.originalUrl, req)
     res.status(data._status || 200).json(
@@ -54,21 +81,19 @@ router.use('/api*splat', async (req, res) => {
 // Serve HTML
 router.use('*all', async (req, res) => {
   try {
-    const url = req.originalUrl.replace(base, '/')
+    const {
+      server: {
+        basePath
+      }
+    } = await getConfig();
+    const url = req.originalUrl.replace(basePath, '/')
 
-    /** @type {string} */
-    let template
-    /** @type {import('./src/server/entrypoint').render} */
-    let render
+    const { serverEntry, template } = await getServerEntryAndTemplate(url)
+    let render: CaratsRender
     if (!isProduction) {
-      // Always read fresh template in development
-      template = fs.readFileSync('./src/client/index.html', 'utf-8')
-      template = await vite.transformIndexHtml(url, template)
-      render = (await vite.ssrLoadModule('./src/server/entrypoint.ts')).render
+      render = (await vite.ssrLoadModule(serverEntry)).render
     } else {
-      template = templateHtml
-      // @ts-ignore
-      render = (await import('./dist/server/entrypoint.js')).render
+      render = (await import(serverEntry)).render
     }
 
     const rendered = await render(url, req)

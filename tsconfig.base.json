@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "ES2022",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "types": ["jjsx", "node"],
+    "types": ["node"],
     "jsx": "react",
     "jsxFactory": "JJSX.jsxFactory",
     "jsxFragmentFactory": "JJSX.fragmentFactory",
@@ -16,12 +16,7 @@
     "baseUrl": ".",
     "resolveJsonModule": true,
     "paths": {
-      "@carats/core": ["packages/core/src/index.ts"],
-      "@carats/csr": ["packages/csr/src/index.ts"],
-      "@carats/express": ["packages/express/src/index.ts"],
-      "@carats/hooks": ["packages/hooks/src/index.ts"],
-      "@carats/ssg": ["packages/ssg/src/index.ts"],
-      "@carats/url": ["packages/url/src/index.ts"]
+      "@carats/*": ["packages/*/src/"]
     }
-  }
+  },
 }

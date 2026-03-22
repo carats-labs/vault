@@ -1,14 +1,16 @@
 {
   "name": "@carats/hooks",
-  "version": "0.0.1",
-  "description": "Hooks module for Carats",
+  "version": "0.0.2",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Hooks module for Carats",
   "files": ["dist"],
-  "scripts": {
-    "build": "tsc"
-  },
+  "type": "module",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "tsup src/index.ts --config ../../tsup.config.ts"
+  },
+  "types": "dist/index.d.ts"
 }

@@ -1,17 +1,6 @@
 import { transpile } from 'jjsx';
-import { readFileSync } from 'fs';
 import { CaratsComponent, getConfig } from '@carats/core';
 import { matchRoute, parseUrl, qs, replaceParams } from '@carats/url';
-
-interface PageComponentModule {
-  default: CaratsComponent
-}
-
-const {
-  routes
-} = await getConfig();
-
-const publicRoutes = Object.fromEntries(Object.entries(routes).filter(([_, route]) => route.public));
 
 interface PageComponentResult {
   component: CaratsComponent<any>;
@@ -19,16 +8,31 @@ interface PageComponentResult {
 }
 
 export async function getPageComponent(path: string): Promise<PageComponentResult> {
+  const { routes, suspense } = await getConfig();
+
+  const publicRoutes = Object.fromEntries(Object.entries(routes).filter(([_, route]) => route.public));
   for (const routePath in publicRoutes) {
     const { component } = publicRoutes[routePath];
     const matchedParams = matchRoute(routePath, path);
     if (matchedParams) {
-      const c = await component;
-      return { component: c, params: matchedParams };
+      if (component instanceof Promise) {
+        const SuspenseComponent = () => {
+          const suspenseId = `carats-suspense-${routePath}`;
+          component
+            .then((e: JSX.Element) => {
+              document.getElementById(suspenseId)?.replaceWith(transpile(e));
+            })
+            .catch((error: Error) => {
+              document.getElementById(suspenseId)?.replaceWith(transpile(suspense.error(error)));
+            });
+          return <div id={suspenseId}>{suspense.loading({ id: suspenseId })}</div>;
+        };
+        return { component: SuspenseComponent, params: matchedParams };
+      }
+      return { component: component, params: matchedParams };
     }
   }
-  const { default: NotFound } = await import(`../client/pages/${'NotFound'}`) as { default: CaratsComponent };
-  return { component: NotFound, params: {} };
+  return { component: suspense.notFound, params: {} };
 }
 
 export async function renderPage(url: string, fetcher: (sspUrl: string) => Promise<any>): Promise<string> {
