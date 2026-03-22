@@ -1,15 +1,14 @@
 {
-  "name": "@carats/core",
+  "name": "@carats",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "description": "Carats monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "prepublishOnly": "npm run build",
-    "build": "tsc"
+    "build": "npm run build --workspaces",
+    "publish": "node scripts/publish.js"
   },
   "keywords": [],
   "author": {
@@ -18,7 +17,6 @@
     "url": "https://www.linkedin.com/in/ufuk-bakan"
   },
   "license": "ISC",
-  "packageManager": "pnpm@10.29.3",
   "devDependencies": {
     "@types/node": "^25.5.0",
     "typescript": "^5.9.3"

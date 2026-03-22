@@ -1,0 +1,21 @@
+{
+  "name": "@carats/csr",
+  "version": "0.0.1",
+  "description": "CSR module for Carats",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "jjsx": "^3.3.0"
+  },
+  "peerDependencies": {
+    "@carats/core": "^0.0.1",
+    "@carats/url": "^0.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
