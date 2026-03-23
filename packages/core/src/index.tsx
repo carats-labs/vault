@@ -81,15 +81,10 @@ export function defineConfig(config: DeepPartial<CaratsConfig>): CaratsConfig {
 let confCache: CaratsConfig;
 
 export function findClosest(fileName: string): string | undefined {
-  const extensions = ['.ts', '.tsx', '.js', '.jsx'];
+  const extensions = ['.tsx', '.ts', '.jsx', '.js', ''];
   let dir = import.meta.dirname;
   while (true) {
-    const fileNames: string[] = [];
-    if (extensions.some(ext => fileName.endsWith(ext))) {
-      fileNames.push(fileName);
-    } else {
-      fileNames.push(...extensions.map(ext => fileName + ext));
-    }
+    const fileNames: string[] = extensions.map(ext => fileName + ext);
     for (const f of fileNames) {
       const fullPath = join(dir, f);
       if (existsSync(fullPath)) {

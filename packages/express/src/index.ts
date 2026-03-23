@@ -65,6 +65,8 @@ async function initVite() {
   }
 }
 
+initVite()
+
 router.use('/api*splat', async (req, res) => {
   try {
     const { serverEntry } = await getServerEntryAndTemplate(req.originalUrl)
