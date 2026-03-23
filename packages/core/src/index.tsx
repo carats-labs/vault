@@ -3,8 +3,6 @@ import { createRequire } from "module";
 import { basename, join } from "path";
 import { cwd } from "process";
 
-const _require = createRequire(import.meta.url);
-
 export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   ssp?: string;
   defaultProps?: T
@@ -109,6 +107,7 @@ export function getConfig(): CaratsConfig {
   }
 
   const fullPath = findClosest('config.cara');
+  const _require = createRequire(import.meta.url);
 
   if (fullPath) {
     const module = _require(fullPath);
