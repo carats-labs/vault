@@ -1,82 +1,69 @@
-import { Router } from 'express'
-import { ViteDevServer } from 'vite'
-import { findClosest, getConfig } from '@carats/core'
-import fs from 'fs'
+import { findClosest, getConfig } from '@carats/core';
+import { Router, Request } from 'express';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { ViteDevServer } from 'vite';
 
-type CaratsRender = (url: string, req: any) => Promise<{
-  html: string;
-  head: string;
+export const router : Router = Router();
+const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path);
+type CaratsRender = (url: string, req: Request) => Promise<{
+  html?: string;
+  head?: string;
 }>
 
+// Constants
 const isProduction = process.env.NODE_ENV === 'production'
 const {
   server: {
     basePath
   }
-} = getConfig();
+} = getConfig()
 
-const router: Router = Router()
+const _clientBaseDir = isProduction ? 'dist/client' : 'src/client';
+const clientBase = findClosest(_clientBaseDir);
+if (!clientBase) throw new Error('Can not find client base directory: ' + _clientBaseDir);
 
+const _serverBaseDir = isProduction ? 'dist/server' : 'src/server';
+const serverBase = findClosest(_serverBaseDir);
+
+if (!serverBase) throw new Error('Can not find server base directory: ' + _serverBaseDir);
+
+// Cached production assets
 const templateHtml = isProduction
-  ? fs.readFileSync('./dist/client/index.html', 'utf-8')
+  ? readFileSync(join(clientBase, 'index.html'), 'utf-8')
   : ''
 
-async function getServerEntryAndTemplate(url: string) {
-  if (isProduction) {
-    const productionServerEntry = findClosest('dist/server/entrypoint.js')
-    if (!productionServerEntry) {
-      throw new Error('Production server entry not found')
-    }
-    const serverEntry = await import(productionServerEntry)
-    return { serverEntry, template: templateHtml }
-  } else {
-    const localServerEntry = findClosest('src/server/entrypoint.ts')
-    if (!localServerEntry) {
-      throw new Error('Local server entry not found')
-    }
-    const serverEntry = await vite.ssrLoadModule(localServerEntry)
-    const templateFile = findClosest('src/client/index.html')
-    if (!templateFile) {
-      throw new Error('Template file not found')
-    }
-    const templateContents = fs.readFileSync(templateFile, 'utf-8')
-    const template = await vite.transformIndexHtml(url, templateContents)
-    return { serverEntry, template }
-  }
-}
-
+// Add Vite or respective production middlewares
+/** @type {import('vite').ViteDevServer | undefined} */
 let vite: ViteDevServer
-async function initVite() {
-  if (!isProduction) {
-    const { createServer } = await import('vite')
-    vite = await createServer({
-      server: { middlewareMode: true },
-      appType: 'custom',
-      base: basePath,
-      root: './src/client',
-      publicDir: './public',
-    })
-    router.use(vite.middlewares)
-  } else {
-    const compression = (await import('compression')).default
-    const sirv = (await import('sirv')).default
-    router.use(compression())
-    router.use(basePath, sirv('./dist/client', { extensions: [] }))
-  }
+if (!isProduction) {
+  const { createServer } = await import('vite')
+  vite = await createServer({
+    server: { middlewareMode: true },
+    appType: 'custom',
+    base: basePath,
+    root: clientBase,
+    publicDir: join(clientBase, '../../', 'public'),
+  })
+  router.use(vite.middlewares)
+} else {
+  const compression = (await import('compression')).default
+  const sirv = (await import('sirv')).default
+  router.use(compression())
+  router.use(basePath, sirv(clientBase, { extensions: [] }))
 }
-
-initVite()
 
 router.use('/api*splat', async (req, res) => {
   try {
-    const { serverEntry } = await getServerEntryAndTemplate(req.originalUrl)
-    const getApiData = serverEntry.getApiData
-    const data = await getApiData(req.originalUrl, req)
+    const serverEntry = await loader(join(serverBase, 'entrypoint'))
+
+    const getApiData = serverEntry.getApiData;
+    const data = await getApiData(req.originalUrl, req);
     res.status(data._status || 200).json(
       Object.fromEntries(Object.keys(data)
         .filter(key => key !== '_status')
         .map(key => [key, data[key]]))
-    )
+    );
   } catch (e: any) {
     console.error(e.message)
     console.error(e.stack)
@@ -87,17 +74,18 @@ router.use('/api*splat', async (req, res) => {
 // Serve HTML
 router.use('*all', async (req, res) => {
   try {
-    const url = req.originalUrl.replace(basePath, '/')
+    const url = req.originalUrl.replace(basePath, '/');
 
-    const { serverEntry, template } = await getServerEntryAndTemplate(url)
-    let render: CaratsRender
+    let template: string
+    const render: CaratsRender = (await loader(join(serverBase, 'entrypoint'))).render;
     if (!isProduction) {
-      render = (await vite.ssrLoadModule(serverEntry)).render
+      template = readFileSync(join(clientBase, 'index.html'), 'utf-8')
+      template = await vite.transformIndexHtml(url, template)
     } else {
-      render = (await import(serverEntry)).render
+      template = templateHtml
     }
 
-    const rendered = await render(url, req)
+    const rendered = await render(url, req);
 
     const html = template
       .replace(`<!--app-head-->`, rendered.head ?? '')
@@ -110,5 +98,3 @@ router.use('*all', async (req, res) => {
     res.status(500).end(e.stack)
   }
 })
-
-export default router
