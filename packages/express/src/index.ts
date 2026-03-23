@@ -34,7 +34,6 @@ const templateHtml = isProduction
   : ''
 
 // Add Vite or respective production middlewares
-/** @type {import('vite').ViteDevServer | undefined} */
 let vite: ViteDevServer
 if (!isProduction) {
   const { createServer } = await import('vite')
