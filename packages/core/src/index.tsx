@@ -1,6 +1,8 @@
 import { existsSync } from "fs";
+import { createRequire } from "module";
 import { basename, join } from "path";
-import { pathToFileURL } from "url";
+
+const _require = createRequire(import.meta.url);
 
 export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   ssp?: string;
@@ -51,7 +53,7 @@ const defaults: CaratsConfig = {
 
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Record<string, unknown>
-  ? T[P] | undefined
+  ? Partial<T[P]> | undefined
   : T[P] extends object
   ? DeepPartial<T[P]>
   : T[P] | undefined;
@@ -73,17 +75,26 @@ export function defineConfig(config: DeepPartial<CaratsConfig>): CaratsConfig {
       ...defaults.suspense,
       ...config.suspense
     }
-  };
+  } as CaratsConfig;
 }
 
 let confCache: CaratsConfig;
 
 export function findClosest(fileName: string): string | undefined {
+  const extensions = ['.ts', '.tsx', '.js', '.jsx'];
   let dir = import.meta.dirname;
   while (true) {
-    const fullPath = join(dir, ...fileName.split('/'));
-    if (existsSync(fullPath)) {
-      return fullPath;
+    const fileNames: string[] = [];
+    if (extensions.some(ext => fileName.endsWith(ext))) {
+      fileNames.push(fileName);
+    } else {
+      fileNames.push(...extensions.map(ext => fileName + ext));
+    }
+    for (const f of fileNames) {
+      const fullPath = join(dir, f);
+      if (existsSync(fullPath)) {
+        return join(dir, fileName);
+      }
     }
     if (dir === basename(dir)) {
       break;
@@ -96,15 +107,15 @@ export function findClosest(fileName: string): string | undefined {
   return undefined;
 }
 
-export async function getConfig(): Promise<CaratsConfig> {
+export function getConfig(): CaratsConfig {
   if (confCache) {
     return confCache;
   }
-  
-  const fullPath = findClosest('config.cara.ts');
+
+  const fullPath = findClosest('config.cara');
 
   if (fullPath) {
-    const module = await import(pathToFileURL(fullPath).href);
+    const module = _require(fullPath);
     confCache = module.default || module;
     return confCache;
   }

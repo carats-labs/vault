@@ -6,7 +6,7 @@ async function main() {
   const {
     routes,
     server
-  } = await getConfig()
+  } = getConfig()
   const staticRoutes = Object
     .keys(routes)
     .filter(p => [undefined, true].includes(routes[p].static))

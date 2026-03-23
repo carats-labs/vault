@@ -9,6 +9,11 @@ type CaratsRender = (url: string, req: any) => Promise<{
 }>
 
 const isProduction = process.env.NODE_ENV === 'production'
+const {
+  server: {
+    basePath
+  }
+} = getConfig();
 
 const router: Router = Router()
 
@@ -42,13 +47,12 @@ async function getServerEntryAndTemplate(url: string) {
 
 let vite: ViteDevServer
 async function initVite() {
-  const conf = await getConfig();
   if (!isProduction) {
     const { createServer } = await import('vite')
     vite = await createServer({
       server: { middlewareMode: true },
       appType: 'custom',
-      base: conf.server.basePath,
+      base: basePath,
       root: './src/client',
       publicDir: './public',
     })
@@ -57,7 +61,7 @@ async function initVite() {
     const compression = (await import('compression')).default
     const sirv = (await import('sirv')).default
     router.use(compression())
-    router.use(conf.server.basePath, sirv('./dist/client', { extensions: [] }))
+    router.use(basePath, sirv('./dist/client', { extensions: [] }))
   }
 }
 
@@ -81,11 +85,6 @@ router.use('/api*splat', async (req, res) => {
 // Serve HTML
 router.use('*all', async (req, res) => {
   try {
-    const {
-      server: {
-        basePath
-      }
-    } = await getConfig();
     const url = req.originalUrl.replace(basePath, '/')
 
     const { serverEntry, template } = await getServerEntryAndTemplate(url)

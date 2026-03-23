@@ -7,8 +7,8 @@ interface PageComponentResult {
   params: Record<string, string>;
 }
 
-export async function getPageComponent(path: string): Promise<PageComponentResult> {
-  const { routes, suspense } = await getConfig();
+export function getPageComponent(path: string): PageComponentResult {
+  const { routes, suspense } = getConfig();
 
   const publicRoutes = Object.fromEntries(Object.entries(routes).filter(([_, route]) => route.public));
   for (const routePath in publicRoutes) {
@@ -37,7 +37,7 @@ export async function getPageComponent(path: string): Promise<PageComponentResul
 
 export async function renderPage(url: string, fetcher: (sspUrl: string) => Promise<any>): Promise<string> {
   const { path, query } = parseUrl(url);
-  const { component, params } = await getPageComponent(path);
+  const { component, params } = getPageComponent(path);
   const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null;
   const props = sspUrl ? await fetcher(sspUrl) : component.defaultProps || { url, params };
   return transpile(component(props));
