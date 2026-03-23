@@ -1,6 +1,6 @@
 {
   "name": "@carats/ssg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SSG module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,6 +12,6 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@carats/core": "^0.0.2"
+    "@carats/core": "^0.0.3"
   }
 }

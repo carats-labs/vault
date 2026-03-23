@@ -1,12 +1,12 @@
 {
   "name": "@carats/csr",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/index.js",
   "dependencies": {
     "jjsx": "^3.3.0"
   },
   "peerDependencies": {
-    "@carats/core": "^0.0.2",
+    "@carats/core": "^0.0.3",
     "@carats/url": "^0.0.1"
   },
   "description": "CSR module for Carats",
