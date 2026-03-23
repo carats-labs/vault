@@ -1,6 +1,7 @@
 import { existsSync } from "fs";
 import { createRequire } from "module";
 import { basename, join } from "path";
+import { cwd } from "process";
 
 const _require = createRequire(import.meta.url);
 
@@ -82,7 +83,7 @@ let confCache: CaratsConfig;
 
 export function findClosest(fileName: string): string | undefined {
   const extensions = ['.tsx', '.ts', '.jsx', '.js', ''];
-  let dir = import.meta.dirname;
+  let dir = cwd();
   while (true) {
     const fileNames: string[] = extensions.map(ext => fileName + ext);
     for (const f of fileNames) {
