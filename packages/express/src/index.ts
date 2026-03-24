@@ -1,15 +1,12 @@
 import { findClosest } from '@carats/core';
-import { Router, Request, Response, NextFunction } from 'express';
+import { CaratsServerEntry } from '@carats/ssr';
+import { NextFunction, Request, Response, Router } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { ViteDevServer } from 'vite';
 
 export const router: Router = Router();
 const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path);
-type CaratsRender = (url: string, req: Request) => Promise<{
-  html?: string;
-  head?: string;
-}>
 
 const isProduction = process.env.NODE_ENV === 'production'
 const config = {
@@ -50,10 +47,7 @@ if (!isProduction) {
 declare global {
   namespace Express {
     interface Request {
-      serverEntry: {
-        render: CaratsRender;
-        getApiData: (url: string, req: Request) => Promise<any>;
-      };
+      serverEntry: CaratsServerEntry;
     }
   }
 }
@@ -66,9 +60,16 @@ const serverLoader = async (req: Request, _res: Response, next: NextFunction) =>
 router.all('*splat', serverLoader, async (req: Request, res: Response) => {
   try {
     const url = req.originalUrl.replace(config.base, '/');
+    const caratsRequest = {
+      url,
+      headers: req.headers as Record<string, string>,
+      cookies: req.cookies,
+      method: req.method,
+      data: req.body,
+    };
     const { getApiData, render } = req.serverEntry;
     if (url.startsWith('/api')) {
-      const data = await getApiData(req.originalUrl, req);
+      const data = await getApiData(caratsRequest);
       const { _status, ...payload } = data;
       return res.status(_status || 200).json(payload);
     }
@@ -77,13 +78,13 @@ router.all('*splat', serverLoader, async (req: Request, res: Response) => {
       ? templateHtml
       : await vite.transformIndexHtml(url, readFileSync(join(clientBase, 'index.html'), 'utf-8'))
 
-    const rendered = await render(url, req);
+    const { head = '', html = '' } = await render(caratsRequest);
 
-    const html = template
-      .replace(`<!--app-head-->`, rendered.head ?? '')
-      .replace(`<!--app-html-->`, rendered.html ?? '')
+    const result = template
+      .replace(`<!--app-head-->`, head)
+      .replace(`<!--app-html-->`, html)
 
-    res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
+    res.status(200).set({ 'Content-Type': 'text/html' }).send(result);
   }
   catch (e) {
     if (e instanceof Error) {
