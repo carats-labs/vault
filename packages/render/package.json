@@ -1,0 +1,19 @@
+{
+  "name": "@carats/render",
+  "version": "0.0.1",
+  "description": "Render module for Carats",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.tsx --config ../../tsup.config.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@carats/url": "^0.0.1",
+    "jjsx": "^3.3.0"
+  }
+}

@@ -1,22 +1,19 @@
 {
   "name": "@carats/core",
-  "version": "0.0.8",
-  "description": "Core function & type definitions for Carats",
+  "version": "0.0.9",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "type": "module",
+  "description": "Core function & type definitions for Carats",
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsup src/index.tsx --config ../../tsup.config.ts"
   },
+  "type": "module",
+  "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@carats/url": "^0.0.1"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
     "jjsx": "^3.3.0"
   }
 }
