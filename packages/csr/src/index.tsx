@@ -1,4 +1,4 @@
-import { CaratsRenderContext, getPageComponent, renderPage } from '@carats/core';
+import { CaratsRenderContext, getPageComponent, renderPage } from '@carats/render';
 import { clearHydrations } from '@carats/hooks';
 import { parseUrl, qs, replaceParams } from '@carats/url';
 import { transpile, init } from 'jjsx';
