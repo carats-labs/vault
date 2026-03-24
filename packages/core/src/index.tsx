@@ -1,4 +1,4 @@
-import { matchRoute, parseUrl, qs, replaceParams } from "@carats/url";
+import { matchRoute } from "@carats/url";
 import { existsSync } from "fs";
 import { transpile } from "jjsx";
 import { createRequire } from "module";
@@ -165,12 +165,6 @@ export function getPageComponent(this: CaratsRenderContext, path: string): PageC
   return { component: suspense.notFound, params: {} };
 }
 
-type Fetcher<T> = (url: string) => Promise<T>;
-
-export async function renderPage<T = any>(this: CaratsRenderContext, url: string, fetcher: Fetcher<T>): Promise<string> {
-  const { path, query } = parseUrl(url);
-  const { component, params } = getPageComponent.call(this, path);
-  const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null;
-  const props = sspUrl ? await fetcher(sspUrl) : component.defaultProps || { url, params };
+export async function renderPage<T = any>(this: CaratsRenderContext, component: CaratsComponent<T>, props: T): Promise<string> {
   return transpile(component(props));
 }

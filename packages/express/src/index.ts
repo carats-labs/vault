@@ -1,17 +1,16 @@
 import { findClosest, getConfig } from '@carats/core';
-import { Router, Request } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { ViteDevServer } from 'vite';
 
-export const router : Router = Router();
+export const router: Router = Router();
 const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path);
 type CaratsRender = (url: string, req: Request) => Promise<{
   html?: string;
   head?: string;
 }>
 
-// Constants
 const isProduction = process.env.NODE_ENV === 'production'
 const {
   server: {
@@ -28,12 +27,10 @@ const serverBase = findClosest(_serverBaseDir);
 
 if (!serverBase) throw new Error('Can not find server base directory: ' + _serverBaseDir);
 
-// Cached production assets
 const templateHtml = isProduction
   ? readFileSync(join(clientBase, 'index.html'), 'utf-8')
   : ''
 
-// Add Vite or respective production middlewares
 let vite: ViteDevServer
 if (!isProduction) {
   const { createServer } = await import('vite')
@@ -52,37 +49,35 @@ if (!isProduction) {
   router.use(basePath, sirv(clientBase, { extensions: [] }))
 }
 
-router.use('/api*splat', async (req, res) => {
-  try {
-    const serverEntry = await loader(join(serverBase, 'entrypoint'))
-
-    const getApiData = serverEntry.getApiData;
-    const data = await getApiData(req.originalUrl, req);
-    res.status(data._status || 200).json(
-      Object.fromEntries(Object.keys(data)
-        .filter(key => key !== '_status')
-        .map(key => [key, data[key]]))
-    );
-  } catch (e: any) {
-    console.error(e.message)
-    console.error(e.stack)
-    res.status(500).end(e.stack)
+declare global {
+  namespace Express {
+    interface Request {
+      serverEntry: {
+        render: CaratsRender;
+        getApiData: (url: string, req: Request) => Promise<any>;
+      };
+    }
   }
-})
+}
 
-// Serve HTML
-router.use('*all', async (req, res) => {
+const serverLoader = async (req: Request, _res: Response, next: NextFunction) => {
+  req.serverEntry = await loader(join(serverBase, 'entrypoint'));
+  next();
+};
+
+router.all('*splat', serverLoader, async (req: Request, res: Response) => {
   try {
     const url = req.originalUrl.replace(basePath, '/');
-
-    let template: string
-    const render: CaratsRender = (await loader(join(serverBase, 'entrypoint'))).render;
-    if (!isProduction) {
-      template = readFileSync(join(clientBase, 'index.html'), 'utf-8')
-      template = await vite.transformIndexHtml(url, template)
-    } else {
-      template = templateHtml
+    const { getApiData, render } = req.serverEntry;
+    if (url.startsWith('/api')) {
+      const data = await getApiData(req.originalUrl, req);
+      const { _status, ...payload } = data;
+      return res.status(_status || 200).json(payload);
     }
+
+    let template = isProduction
+      ? templateHtml
+      : await vite.transformIndexHtml(url, readFileSync(join(clientBase, 'index.html'), 'utf-8'))
 
     const rendered = await render(url, req);
 
@@ -90,10 +85,16 @@ router.use('*all', async (req, res) => {
       .replace(`<!--app-head-->`, rendered.head ?? '')
       .replace(`<!--app-html-->`, rendered.html ?? '')
 
-    res.status(200).set({ 'Content-Type': 'text/html' }).send(html)
-  } catch (e: any) {
-    vite?.ssrFixStacktrace(e)
-    console.error(e.stack)
-    res.status(500).end(e.stack)
+    res.status(200).set({ 'Content-Type': 'text/html' }).send(html);
   }
-})
+  catch (e) {
+    if (e instanceof Error) {
+      vite?.ssrFixStacktrace(e)
+      console.error(e.stack)
+      res.status(500).end(e.stack)
+    } else {
+      console.error(e)
+      res.status(500).end(JSON.stringify(e))
+    }
+  }
+});

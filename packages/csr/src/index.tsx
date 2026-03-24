@@ -1,5 +1,6 @@
-import { CaratsRenderContext, renderPage } from '@carats/core';
+import { CaratsRenderContext, getPageComponent, renderPage } from '@carats/core';
 import { clearHydrations } from '@carats/hooks';
+import { parseUrl, qs, replaceParams } from '@carats/url';
 import { transpile, init } from 'jjsx';
 
 init();
@@ -7,6 +8,19 @@ init();
 declare global {
   interface HTMLAnchorElement {
     _isHandled: boolean;
+  }
+  interface Window {
+    ssp: {
+      for: string | undefined,
+      data: any
+    }
+  }
+}
+
+if (!window.ssp) {
+  window.ssp = {
+    for: undefined,
+    data: null
   }
 }
 
@@ -21,7 +35,19 @@ export default function BuildCarats(config: CaratsRenderContext) {
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250);
     await clearHydrations();
     try {
-      const html = await renderPage.call(config, url, async (sspUrl) => await fetch(sspUrl).then(r => r.json()));
+      const { path, query } = parseUrl(url);
+      const { component, params } = getPageComponent.call(config, path);
+      const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null;
+      let props = window.ssp.data;
+      if (window.ssp.for !== sspUrl) {
+        props = component.defaultProps || { url, params };
+        if (sspUrl) {
+          props = await fetch(sspUrl).then(r => r.json());
+          window.ssp.data = props;
+          window.ssp.for = sspUrl;
+        }
+      }
+      const html = await renderPage.call(config, component, props);
       document.getElementById("app")!.innerHTML = html;
     } catch (error) {
       document.getElementById("app")!.innerHTML = transpile(suspense.error(error as Error));
