@@ -22,7 +22,7 @@ if (!window.ssp) {
 }
 
 function matchHallmarkComponent(hallmarkPath: string, component: Function){
-  const hallmarkName = hallmarkPath.split('/').pop()
+  const hallmarkName = hallmarkPath.split('/').pop()?.replace('.api', '').replace('.ts', '')
   return component.name === hallmarkName
 }
 

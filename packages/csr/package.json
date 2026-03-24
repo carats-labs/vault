@@ -1,6 +1,6 @@
 {
   "name": "@carats/csr",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "main": "dist/index.js",
   "dependencies": {
     "jjsx": "^3.3.0"
