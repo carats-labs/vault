@@ -38,12 +38,12 @@ export default function BuildCarats(facets: Facets) {
       const { component, params } = getPageComponent.call(facets, path)
       const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null
       let props = window.ssp.data
-      if (window.ssp.for !== sspUrl) {
+      if (window.ssp.for !== component.name) {
         props = component.defaultProps || { url, params }
         if (sspUrl) {
           props = await fetch(sspUrl).then(r => r.json())
           window.ssp.data = props
-          window.ssp.for = sspUrl
+          window.ssp.for = component.name
         }
       }
       const html = await renderPage.call(facets, component, props)

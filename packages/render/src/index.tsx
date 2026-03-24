@@ -1,9 +1,10 @@
 import { matchRoute } from "@carats/url";
 import { transpile } from "jjsx";
 
-interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
-  ssp?: string;
+export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
+  ssp?: string
   defaultProps?: T
+  head?: string
 }
 
 export interface Facets {

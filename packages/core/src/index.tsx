@@ -2,17 +2,6 @@ import { existsSync } from "fs"
 import { basename, join } from "path"
 import { cwd } from "process"
 
-export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
-  ssp?: string
-  defaultProps?: T
-}
-
-export interface CaratsRoute {
-  component: CaratsComponent
-  public: boolean
-  static: boolean
-}
-
 export interface CaratsRequest<T = any> {
   url: string
   headers: Record<string, string>
@@ -21,7 +10,9 @@ export interface CaratsRequest<T = any> {
   data: T
 }
 
-export type Hallmark<T = any> = (request: CaratsRequest & { params: Record<string, string> }) => T
+export interface Hallmark<T = any> {
+  default: (request: CaratsRequest & { params: Record<string, string> }) => T
+}
 
 export function findClosest(fileName: string): string | undefined {
   const extensions = ['.tsx', '.ts', '.jsx', '.js', '']

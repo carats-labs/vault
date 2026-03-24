@@ -1,32 +1,15 @@
 import { CaratsRequest, Hallmark } from '@carats/core'
-import { getPageComponent, renderPage, Facets } from '@carats/render'
-import { matchRoute, parseUrl, qs, replaceParams } from '@carats/url'
+import { Facets, getPageComponent, renderPage } from '@carats/render'
 import { init, transpile } from 'jjsx'
 
 export interface CaratsServerEntry {
-  getApiData: <T = any>(req: CaratsRequest) => Promise<T>
   render: (req: CaratsRequest) => Promise<{ html?: string; head?: string }>
 }
 
+type HallmarkArgs = Parameters<Hallmark['default']>[0]
+
 export default function defineServerEntry(facets: Facets, hallmarks: Record<string, Hallmark>): CaratsServerEntry {
   init()
-  async function getApiData(req: CaratsRequest) {
-    const { path } = parseUrl(req.url)
-    for (const [routePath, hallmark] of Object.entries(hallmarks)) {
-      const matchedParams = matchRoute(routePath, path)
-      if (matchedParams) {
-        return await hallmark({
-          params: matchedParams,
-          url: req.url,
-          cookies: req.cookies,
-          headers: req.headers,
-          method: req.method,
-          data: req.data
-        })
-      }
-    }
-    return { _status: 404, error: 'API endpoint not found' }
-  }
 
   async function render(req: CaratsRequest) {
     const {
@@ -34,19 +17,22 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
         error: ErrorPage
       }
     } = facets
-    const { query } = parseUrl(req.url)
     const { component, params } = getPageComponent.call(facets, req.url)
-    let props = component.defaultProps || { url: req.url, params }
+    const args: HallmarkArgs = { ...req, params }
+    let props = component.defaultProps || args
     let head = ''
-    if (component.ssp) {
-      const sspUrl = replaceParams(component.ssp + qs(query), params)
-      props = await getApiData(req)
-      head = props.head || ''
-      head += '\n' + `<script>window.ssp=${JSON.stringify({ for: sspUrl, data: props })}</script>`
+    const sspSidecar = Object.keys(hallmarks).find(h => h.endsWith(`${component.name}.api.ts`))
+    if (sspSidecar) {
+      const sspModule = hallmarks[sspSidecar];
+      props = await sspModule.default(args);
+      head = component.head || ''
+      head += '\n' + `<script>window.ssp=${JSON.stringify({ for: component.name, data: props })}</script>`
+      head = head.trim()
     }
+    const html = await renderPage.call(facets, component, props);
     try {
       return {
-        html: await renderPage.call(facets, component, props),
+        html,
         head
       }
     } catch (error) {
@@ -58,7 +44,6 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
   }
 
   return {
-    getApiData,
-    render
+    render,
   }
 }
