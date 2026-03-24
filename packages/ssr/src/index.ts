@@ -6,9 +6,11 @@ export interface CaratsServerEntry {
   render: (req: CaratsRequest) => Promise<{ html?: string; head?: string }>
 }
 
-type HallmarkArgs = Parameters<Hallmark['default']>[0]
+interface HallmarkModule {
+  default: Hallmark
+}
 
-export default function defineServerEntry(facets: Facets, hallmarks: Record<string, Hallmark>): CaratsServerEntry {
+export default function defineServerEntry(facets: Facets, hallmarks: Record<string, HallmarkModule>): CaratsServerEntry {
   init()
 
   async function render(req: CaratsRequest) {
@@ -18,7 +20,7 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
       }
     } = facets
     const { component, params } = getPageComponent.call(facets, req.url)
-    const args: HallmarkArgs = { ...req, params }
+    const args: Parameters<Hallmark>[0] = { ...req, params }
     let props = component.defaultProps || args
     let head = ''
     const sspSidecar = Object.keys(hallmarks).find(h => h.endsWith(`${component.name}.api.ts`))
