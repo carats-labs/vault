@@ -57,6 +57,10 @@ const serverLoader = async (req: Request, _res: Response, next: NextFunction) =>
   next();
 };
 
+router.get('/.carats/hallmarks', async (req: Request, res: Response) => {
+  res.json(Object.keys(req.serverEntry.hallmarks));
+});
+
 router.all('*splat', serverLoader, async (req: Request, res: Response) => {
   try {
     const url = req.originalUrl.replace(config.base, '/');
@@ -67,9 +71,9 @@ router.all('*splat', serverLoader, async (req: Request, res: Response) => {
       method: req.method,
       data: req.body,
     };
-    const { getApiData, render } = req.serverEntry;
+    const { getServerProps, render } = req.serverEntry;
     if (url.startsWith('/api')) {
-      const data = await getApiData(caratsRequest);
+      const data = await getServerProps(caratsRequest);
       const { _status, ...payload } = data;
       return res.status(_status || 200).json(payload);
     }

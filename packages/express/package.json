@@ -1,6 +1,6 @@
 {
   "name": "@carats/express",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Express module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,7 +20,7 @@
     "sirv": "^3.0.2",
     "vite": "^5.0.0 || ^6.0.0",
     "@carats/core": "^0.0.10",
-    "@carats/ssr": "^0.0.1"
+    "@carats/ssr": "^0.0.5"
   },
   "publishConfig": {
     "access": "public"

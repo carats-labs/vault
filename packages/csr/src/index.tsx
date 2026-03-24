@@ -1,7 +1,7 @@
-import { Facets, getPageComponent, renderPage } from '@carats/render'
 import { clearHydrations } from '@carats/hooks'
-import { parseUrl, qs, replaceParams } from '@carats/url'
-import { transpile, init } from 'jjsx'
+import { Facets, getPageComponent, renderPage } from '@carats/render'
+import { matchRoute } from '@carats/url'
+import { init, transpile } from 'jjsx'
 
 declare global {
   interface HTMLAnchorElement {
@@ -22,8 +22,9 @@ if (!window.ssp) {
   }
 }
 
-export default function BuildCarats(facets: Facets) {
+export default async function BuildCarats(facets: Facets) {
   init()
+  const hallmarkedRoutes: string[] = await fetch('/.carats/hallmarks').then(r => r.json())
   const { suspense, inAppRouting = true } = facets
   suspense.loading = suspense.loading ?? (() => <>💎 Loading...</>)
   suspense.error = suspense.error ?? ((error: Error) => <>💎 Error: {error.message}</>)
@@ -34,13 +35,12 @@ export default function BuildCarats(facets: Facets) {
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
     await clearHydrations()
     try {
-      const { path, query } = parseUrl(url)
-      const { component, params } = getPageComponent.call(facets, path)
-      const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null
+      const { component, params } = getPageComponent.call(facets, location.pathname)
       let props = window.ssp.data
       if (window.ssp.for !== component.name) {
         props = component.defaultProps || { url, params }
-        if (sspUrl) {
+        if (hallmarkedRoutes.some(route => matchRoute(route, location.pathname))) {
+          const sspUrl = `/api${url}`
           props = await fetch(sspUrl).then(r => r.json())
           window.ssp.data = props
           window.ssp.for = component.name
