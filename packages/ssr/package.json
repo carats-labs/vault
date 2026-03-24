@@ -1,0 +1,22 @@
+{
+  "name": "@carats/ssr",
+  "version": "0.0.1",
+  "description": "SSG module for Carats",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "type": "module",
+  "scripts": {
+    "build": "tsup ./src/index.ts --config ../../tsup.config.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@carats/core": "^0.0.10",
+    "@carats/render": "^0.0.1",
+    "@carats/url": "^0.0.1",
+    "jjsx": "^3.3.0",
+    "vite": "^8.0.2"
+  }
+}
