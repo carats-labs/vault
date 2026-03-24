@@ -1,6 +1,5 @@
 import { clearHydrations } from '@carats/hooks'
 import { Facets, getPageComponent, renderPage } from '@carats/render'
-import { matchRoute } from '@carats/url'
 import { init, transpile } from 'jjsx'
 
 declare global {
@@ -22,9 +21,14 @@ if (!window.ssp) {
   }
 }
 
+function matchHallmarkComponent(hallmarkPath: string, component: Function){
+  const hallmarkName = hallmarkPath.split('/').pop()
+  return component.name === hallmarkName
+}
+
 export default async function BuildCarats(facets: Facets) {
   init()
-  const hallmarkedRoutes: string[] = await fetch('/.carats/hallmarks').then(r => r.json())
+  const hallmarks: string[] = await fetch('/.carats/hallmarks').then(r => r.json())
   const { suspense, inAppRouting = true } = facets
   suspense.loading = suspense.loading ?? (() => <>💎 Loading...</>)
   suspense.error = suspense.error ?? ((error: Error) => <>💎 Error: {error.message}</>)
@@ -39,7 +43,7 @@ export default async function BuildCarats(facets: Facets) {
       let props = window.ssp.data
       if (window.ssp.for !== component.name) {
         props = component.defaultProps || { url, params }
-        if (hallmarkedRoutes.some(route => matchRoute(route, location.pathname))) {
+        if (hallmarks.some(route => matchHallmarkComponent(route, component))) {
           const sspUrl = `/api${url}`
           props = await fetch(sspUrl).then(r => r.json())
           window.ssp.data = props
