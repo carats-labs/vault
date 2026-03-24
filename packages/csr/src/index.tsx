@@ -1,6 +1,8 @@
 import { CaratsRenderContext, renderPage } from '@carats/core';
 import { clearHydrations } from '@carats/hooks';
-import { transpile } from 'jjsx';
+import { transpile, init } from 'jjsx';
+
+init();
 
 declare global {
   interface HTMLAnchorElement {
@@ -14,7 +16,8 @@ export default function BuildCarats(config: CaratsRenderContext) {
   suspense.error = suspense.error ?? ((error: Error) => <>💎 Error: {error.message}</>);
   suspense.notFound = suspense.notFound ?? (() => <>💎 Not Found</>);
 
-  async function clientRender(url: string) {
+  async function clientRender() {
+    const url = location.pathname + location.search;
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250);
     await clearHydrations();
     try {
@@ -39,7 +42,7 @@ export default function BuildCarats(config: CaratsRenderContext) {
           const targetUrl = new URL(anchor.href);
           if (targetUrl.origin !== location.origin || anchor.download) return;
           event.preventDefault();
-          clientRender(targetUrl.pathname + targetUrl.search);
+          clientRender();
         });
         anchor._isHandled = true;
       });
