@@ -1,6 +1,6 @@
 {
   "name": "@carats/core",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "dist/index.js",
   "description": "Core function & type definitions for Carats",
   "files": ["dist"],
