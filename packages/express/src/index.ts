@@ -1,4 +1,4 @@
-import { findClosest, getConfig } from '@carats/core';
+import { findClosest } from '@carats/core';
 import { Router, Request, Response, NextFunction } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -12,11 +12,12 @@ type CaratsRender = (url: string, req: Request) => Promise<{
 }>
 
 const isProduction = process.env.NODE_ENV === 'production'
-const {
+const config = {
+  base: process.env.BASE || '/',
   server: {
-    basePath
+    port: process.env.PORT ? parseInt(process.env.PORT) : 3000
   }
-} = getConfig()
+}
 
 const _clientBaseDir = isProduction ? 'dist/client' : 'src/client';
 const clientBase = findClosest(_clientBaseDir);
@@ -35,18 +36,15 @@ let vite: ViteDevServer
 if (!isProduction) {
   const { createServer } = await import('vite')
   vite = await createServer({
-    server: { middlewareMode: true },
-    appType: 'custom',
-    base: basePath,
-    root: clientBase,
-    publicDir: join(clientBase, '../../', 'public'),
+    configFile: join(serverBase, '../..', 'vite.config.client.ts'),
   })
+  Object.assign(config, vite.config);
   router.use(vite.middlewares)
 } else {
   const compression = (await import('compression')).default
   const sirv = (await import('sirv')).default
   router.use(compression())
-  router.use(basePath, sirv(clientBase, { extensions: [] }))
+  router.use(config.base, sirv(clientBase, { extensions: [] }))
 }
 
 declare global {
@@ -67,7 +65,7 @@ const serverLoader = async (req: Request, _res: Response, next: NextFunction) =>
 
 router.all('*splat', serverLoader, async (req: Request, res: Response) => {
   try {
-    const url = req.originalUrl.replace(basePath, '/');
+    const url = req.originalUrl.replace(config.base, '/');
     const { getApiData, render } = req.serverEntry;
     if (url.startsWith('/api')) {
       const data = await getApiData(req.originalUrl, req);
