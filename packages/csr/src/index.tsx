@@ -27,7 +27,6 @@ export default function BuildCarats(config: CaratsRenderContext) {
       document.getElementById("app")!.innerHTML = transpile(suspense.error(error as Error));
     } finally {
       clearTimeout(loaderTimer);
-      history.pushState(null, "", url);
       window.dispatchEvent(new Event("load"));
       document.getElementById("loading-indicator")?.classList.add("hide");
     }
@@ -39,6 +38,7 @@ export default function BuildCarats(config: CaratsRenderContext) {
       anchors.forEach((anchor) => {
         if (anchor._isHandled) return;
         anchor.addEventListener("click", (event) => {
+          history.pushState(null, "", anchor.href);
           const targetUrl = new URL(anchor.href);
           if (targetUrl.origin !== location.origin || anchor.download) return;
           event.preventDefault();
