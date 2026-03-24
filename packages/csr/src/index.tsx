@@ -21,9 +21,9 @@ if (!window.ssp) {
   }
 }
 
-function matchHallmarkComponent(hallmarkPath: string, component: Function){
-  const hallmarkName = hallmarkPath.split('/').pop()?.replace('.api', '').replace('.ts', '')
-  return component.name === hallmarkName
+function matchHallmarkComponent(hallmarkPath: string, componentHallmark?: string){
+  const hallmarkName = hallmarkPath.split('/').pop()?.replace('.cara', '').replace('.ts', '')
+  return componentHallmark === hallmarkName
 }
 
 export default async function BuildCarats(facets: Facets) {
@@ -39,15 +39,15 @@ export default async function BuildCarats(facets: Facets) {
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
     await clearHydrations()
     try {
-      const { component, params } = getPageComponent.call(facets, location.pathname)
+      const { component, params, hallmark } = getPageComponent.call(facets, location.pathname)
       let props = window.ssp.data
-      if (window.ssp.for !== component.name) {
+      if (window.ssp.for !== hallmark) {
         props = component.defaultProps || { url, params }
-        if (hallmarks.some(route => matchHallmarkComponent(route, component))) {
+        if (hallmarks.some(route => matchHallmarkComponent(route, hallmark))) {
           const sspUrl = `/api${url}`
           props = await fetch(sspUrl).then(r => r.json())
           window.ssp.data = props
-          window.ssp.for = component.name
+          window.ssp.for = hallmark
         }
       }
       const html = await renderPage.call(facets, component, props)

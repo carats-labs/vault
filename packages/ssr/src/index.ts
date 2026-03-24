@@ -17,10 +17,10 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
   init()
 
   async function getServerProps(req: CaratsRequest) {
-    const { component, params } = getPageComponent.call(facets, req.url.replace('/api', ''))
-    const sspSidecar = Object.keys(hallmarks).find(h => h.endsWith(`${component.name}.api.ts`))
-    if (!sspSidecar) return component.defaultProps || { ...req, params };
-    const sspModule = hallmarks[sspSidecar];
+    const { component, params, hallmark } = getPageComponent.call(facets, req.url.replace('/api', ''))
+    const hallmarkPath = Object.keys(hallmarks).find(h => h.endsWith(`${hallmark}.cara.ts`));
+    if (!hallmarkPath) return component.defaultProps || { ...req, params };
+    const sspModule = hallmarks[hallmarkPath];
     return await sspModule.default({ ...req, params });
   }
 
@@ -30,10 +30,10 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
         error: ErrorPage
       }
     } = facets
-    const { component, params } = getPageComponent.call(facets, req.url)
+    const { component, hallmark } = getPageComponent.call(facets, req.url)
     const props = await getServerProps(req)
     let head = component.head || ''
-    head += '\n' + `<script>window.ssp=${JSON.stringify({ for: component.name, data: props })}</script>`
+    head += '\n' + `<script>window.ssp=${JSON.stringify({ for: hallmark, data: props })}</script>`
     head = head.trim()
     const html = await renderPage.call(facets, component, props);
     try {

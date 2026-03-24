@@ -9,7 +9,12 @@ export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
 
 export interface Facets {
   inAppRouting?: boolean;
-  routes: Record<string, CaratsComponent>
+  routes: {
+    [key: string]: {
+      component: CaratsComponent;
+      hallmark?: string
+    }
+  }
   suspense: {
     loading: () => JSX.Element;
     error: (error: Error) => JSX.Element;
@@ -20,6 +25,7 @@ export interface Facets {
 interface PageComponentResult {
   component: CaratsComponent<any>;
   params: Record<string, string>;
+  hallmark?: string;
 }
 
 export function getPageComponent(this: Facets, path: string): PageComponentResult {
@@ -28,7 +34,7 @@ export function getPageComponent(this: Facets, path: string): PageComponentResul
 
 
   for (const routePath in routes) {
-    const component = routes[routePath];
+    const { component, hallmark } = routes[routePath];
     const matchedParams = matchRoute(routePath, path);
     if (matchedParams) {
       if (component instanceof Promise) {
@@ -43,9 +49,9 @@ export function getPageComponent(this: Facets, path: string): PageComponentResul
             });
           return <div id={suspenseId}>{suspense.loading()}</div>;
         };
-        return { component: SuspenseComponent, params: matchedParams };
+        return { component: SuspenseComponent, params: matchedParams, hallmark };
       }
-      return { component: component, params: matchedParams };
+      return { component: component, params: matchedParams, hallmark };
     }
   }
   return { component: suspense.notFound, params: {} };
