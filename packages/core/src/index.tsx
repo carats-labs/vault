@@ -168,9 +168,9 @@ export function getPageComponent(this: CaratsRenderContext, path: string): PageC
 type Fetcher<T> = (url: string) => Promise<T>;
 
 export async function renderPage<T = any>(this: CaratsRenderContext, url: string, fetcher: Fetcher<T>): Promise<string> {
-    const { path, query } = parseUrl(url);
-    const { component, params } = getPageComponent.call(this, path);
-    const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null;
-    const props = sspUrl ? await fetcher(sspUrl) : component.defaultProps || { url, params };
-    return transpile(component(props));
-  }
+  const { path, query } = parseUrl(url);
+  const { component, params } = getPageComponent.call(this, path);
+  const sspUrl = component.ssp ? replaceParams(component.ssp + qs(query), params) : null;
+  const props = sspUrl ? await fetcher(sspUrl) : component.defaultProps || { url, params };
+  return transpile(component(props));
+}
