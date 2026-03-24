@@ -1,12 +1,12 @@
 {
   "name": "@carats/csr",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/index.js",
   "dependencies": {
     "jjsx": "^3.3.0"
   },
   "peerDependencies": {
-    "@carats/core": "^0.0.6",
+    "@carats/core": "^0.0.7",
     "@carats/hooks": "^0.0.2",
     "@carats/url": "^0.0.1"
   },
