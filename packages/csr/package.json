@@ -7,7 +7,7 @@
   },
   "peerDependencies": {
     "@carats/hooks": "^0.0.2",
-    "@carats/render": "^0.0.1",
+    "@carats/render": "^0.0.2",
     "@carats/url": "^0.0.1"
   },
   "description": "CSR module for Carats",
