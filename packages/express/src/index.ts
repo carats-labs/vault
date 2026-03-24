@@ -53,7 +53,7 @@ declare global {
 }
 
 const serverLoader = async (req: Request, _res: Response, next: NextFunction) => {
-  req.serverEntry = await loader(join(serverBase, 'entrypoint'))
+  req.serverEntry = (await loader(join(serverBase, 'entrypoint'))).default
   next()
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@carats/express",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Express module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
