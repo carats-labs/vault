@@ -6,7 +6,7 @@ interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   defaultProps?: T
 }
 
-export interface CaratsRenderContext {
+export interface Facets {
   inAppRouting?: boolean;
   routes: Record<string, CaratsComponent>
   suspense: {
@@ -21,7 +21,7 @@ interface PageComponentResult {
   params: Record<string, string>;
 }
 
-export function getPageComponent(this: CaratsRenderContext, path: string): PageComponentResult {
+export function getPageComponent(this: Facets, path: string): PageComponentResult {
 
   const { routes, suspense } = this;
 
@@ -50,6 +50,6 @@ export function getPageComponent(this: CaratsRenderContext, path: string): PageC
   return { component: suspense.notFound, params: {} };
 }
 
-export async function renderPage<T = any>(this: CaratsRenderContext, component: CaratsComponent<T>, props: T): Promise<string> {
+export async function renderPage<T = any>(this: Facets, component: CaratsComponent<T>, props: T): Promise<string> {
   return transpile(component(props));
 }
