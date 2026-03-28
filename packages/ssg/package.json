@@ -1,10 +1,12 @@
 {
   "name": "@carats/ssg",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "SSG module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "files": ["dist"],
+  "bin": "dist/index.js",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "tsup src/index.ts --config ../../tsup.config.ts"

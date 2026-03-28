@@ -1,30 +1,45 @@
-import { findClosest, getConfig } from "@carats/core";
+#!/usr/bin/env bun
+import { findClosest } from "@carats/core";
+import { Facets } from "@carats/render";
 import { mkdirSync, writeFileSync } from "fs";
+import { Server } from "http";
+import { AddressInfo } from "net";
 import { dirname, join } from "path";
 
 async function main() {
-  const {
-    routes,
-    server
-  } = getConfig()
-  const staticRoutes = Object
-    .keys(routes)
-    .filter(p => [undefined, true].includes(routes[p].static))
-    .filter(p => !p.includes('/:'));
+  const facetsFile = findClosest('src/client/facets.cara.ts');
+  if (!facetsFile) {
+    console.error('Could not find facets file (src/client/facets.cara.ts)')
+    process.exit(1)
+  }
+  const appFile = findClosest('src/app.ts');
+  if (!appFile) {
+    console.error('Could not find app file (src/app.ts)')
+    process.exit(1)
+  }
+  const closestClientBuildDir = findClosest('dist/client');
 
-  const ORIGIN = `${server.localOrigin}:${server.port}`
-  const closestClientDir = findClosest('dist/client');
-
-  if (!closestClientDir) {
+  if (!closestClientBuildDir) {
     console.error('Could not find dist/client directory')
     process.exit(1)
   }
+
+  const facetsModule = await import(facetsFile);
+  const facets = facetsModule.default as Facets;
+  const staticRoutes = Object
+    .keys(facets.routes)
+    .filter(p => !p.includes('/:'));
+
+  const app: Server = (await import(appFile)).default;
+  const { port }: AddressInfo = app.address() as AddressInfo;
+
+  const ORIGIN = `http://localhost:${port}`
 
   for (const path of staticRoutes) {
     console.log('Building page:', path)
     const response = await fetch(`${ORIGIN}${path}`)
     const html = await response.text()
-    const targetBuildPath = join(closestClientDir, path, 'index.html')
+    const targetBuildPath = join(closestClientBuildDir, path, 'index.html')
     mkdirSync(dirname(targetBuildPath), { recursive: true })
     writeFileSync(targetBuildPath, html)
   }
