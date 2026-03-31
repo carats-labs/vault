@@ -1,27 +1,28 @@
-import { CaratsRequest, Hallmark } from '@carats/core'
-import { Facets, getPageComponent, renderPage } from '@carats/render'
+import { CaratsRequest, Culet } from '@carats/core'
+import { Facets, getPageComponent, PageComponentResult, renderPage } from '@carats/render'
+import { parseUrl } from '@carats/url';
 import { init, transpile } from 'jjsx'
 
 export interface CaratsServerEntry {
   render: (req: CaratsRequest) => Promise<{ html?: string; head?: string }>
   getServerProps: <T = any>(req: CaratsRequest) => Promise<T> | T
   facets: Facets
-  hallmarks: Record<string, HallmarkModule>
+  culets: Record<string, Culet>
 }
 
-interface HallmarkModule {
-  default: Hallmark
+const culets : Record<string, Culet> = {}
+
+export function culet(route: string, culet: Culet) {
+  culets[route] = culet
 }
 
-export default function defineServerEntry(facets: Facets, hallmarks: Record<string, HallmarkModule>): CaratsServerEntry {
+export function defineServerEntry(facets: Facets): CaratsServerEntry {
   init()
 
-  async function getServerProps(req: CaratsRequest) {
-    const { component, params, hallmark } = getPageComponent.call(facets, req.url.replace('/api', ''))
-    const hallmarkPath = Object.keys(hallmarks).find(h => h.endsWith(`${hallmark}.cara.ts`));
-    if (!hallmarkPath) return component.defaultProps || { ...req, params };
-    const sspModule = hallmarks[hallmarkPath];
-    return await sspModule.default({ ...req, params });
+  async function getServerProps(req: CaratsRequest, pageComponentResult?: PageComponentResult) {
+    const { component, params, route } = pageComponentResult || getPageComponent.call(facets, req.url.replace('/culet', ''))
+    if(!culets[route]) return component.defaultProps
+    return await culets[route]({ ...req, params })
   }
 
   async function render(req: CaratsRequest) {
@@ -30,10 +31,12 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
         error: ErrorPage
       }
     } = facets
-    const { component, hallmark } = getPageComponent.call(facets, req.url)
-    const props = await getServerProps(req)
+    const pcr = getPageComponent.call(facets, req.url)
+    const { path } = parseUrl(req.url);
+    const props = await getServerProps(req, pcr)
+    const { component } = pcr
     let head = component.head || ''
-    head += '\n' + `<script>window.ssp=${JSON.stringify({ for: hallmark, data: props })}</script>`
+    head += '\n' + `<script>window.ssp=${JSON.stringify({ for: path, data: props })}</script>`
     head = head.trim()
     const html = await renderPage.call(facets, component, props);
     try {
@@ -53,6 +56,6 @@ export default function defineServerEntry(facets: Facets, hallmarks: Record<stri
     render,
     getServerProps,
     facets,
-    hallmarks
+    culets,
   }
 }

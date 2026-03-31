@@ -21,14 +21,8 @@ if (!window.ssp) {
   }
 }
 
-function matchHallmarkComponent(hallmarkPath: string, componentHallmark?: string){
-  const hallmarkName = hallmarkPath.split('/').pop()?.replace('.cara', '').replace('.ts', '')
-  return componentHallmark === hallmarkName
-}
-
 export default async function BuildCarats(facets: Facets) {
   init()
-  const hallmarks: string[] = await fetch('/.carats/hallmarks').then(r => r.json())
   const { suspense, inAppRouting = true } = facets
   suspense.loading = suspense.loading ?? (() => <>💎 Loading...</>)
   suspense.error = suspense.error ?? ((error: Error) => <>💎 Error: {error.message}</>)
@@ -39,16 +33,15 @@ export default async function BuildCarats(facets: Facets) {
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
     await clearHydrations()
     try {
-      const { component, params, hallmark } = getPageComponent.call(facets, location.pathname)
-      let props = window.ssp.data
-      if (window.ssp.for !== hallmark) {
-        props = component.defaultProps || { url, params }
-        if (hallmarks.some(route => matchHallmarkComponent(route, hallmark))) {
-          const sspUrl = `/api${url}`
+      const { component } = getPageComponent.call(facets, location.pathname)
+      let props = component.defaultProps
+      if (component.burnished && window.ssp.for !== url) {
+          const sspUrl = `/culet${url}`
           props = await fetch(sspUrl).then(r => r.json())
           window.ssp.data = props
-          window.ssp.for = hallmark
-        }
+          window.ssp.for = url
+      } else {
+        props = window.ssp.data
       }
       const html = await renderPage.call(facets, component, props)
       document.getElementById("app")!.innerHTML = html

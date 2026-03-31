@@ -1,6 +1,6 @@
 {
   "name": "@carats/render",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Render module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

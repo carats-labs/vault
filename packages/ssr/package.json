@@ -1,6 +1,6 @@
 {
   "name": "@carats/ssr",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "SSR module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,8 +14,8 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@carats/core": "^0.0.12",
-    "@carats/render": "^0.0.5",
+    "@carats/core": "^0.0.13",
+    "@carats/render": "^0.0.6",
     "jjsx": "^3.3.0",
     "vite": "^8.0.2"
   }

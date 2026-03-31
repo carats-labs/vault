@@ -1,6 +1,5 @@
 import { findClosest } from '@carats/core'
-import { CaratsServerEntry } from '@carats/ssr'
-import { NextFunction, Request, Response, Router } from 'express'
+import { Request, Response, Router } from 'express'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { ViteDevServer } from 'vite'
@@ -44,26 +43,9 @@ if (!isProduction) {
   router.use(config.base, sirv(clientBase, { extensions: [] }))
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      serverEntry: CaratsServerEntry
-    }
-  }
-}
+const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).default
 
-const serverLoader = async (req: Request, _res: Response, next: NextFunction) => {
-  req.serverEntry = (await loader(join(serverBase, 'entrypoint'))).default
-  next()
-}
-
-router.use(serverLoader)
-
-router.get('/.carats/hallmarks', async (req: Request, res: Response) => {
-  res.json(Object.keys(req.serverEntry.hallmarks))
-})
-
-router.all('*splat', serverLoader, async (req: Request, res: Response) => {
+router.all('*splat', async (req: Request, res: Response) => {
   try {
     const url = req.originalUrl.replace(config.base, '/')
     const caratsRequest = {
@@ -73,8 +55,8 @@ router.all('*splat', serverLoader, async (req: Request, res: Response) => {
       method: req.method,
       data: req.body,
     }
-    const { getServerProps, render } = req.serverEntry
-    if (url.startsWith('/api')) {
+    
+    if (url.startsWith('/culet/')) {
       const data = await getServerProps(caratsRequest)
       const { _status, ...payload } = data
       return res.status(_status || 200).json(payload)
