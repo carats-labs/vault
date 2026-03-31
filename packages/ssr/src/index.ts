@@ -1,4 +1,4 @@
-import { CaratsRequest, Culet } from '@carats/core'
+import { CaratsRequest } from '@carats/core'
 import { Facets, getPageComponent, PageComponentResult, renderPage } from '@carats/render'
 import { parseUrl } from '@carats/url';
 import { init, transpile } from 'jjsx'
@@ -10,11 +10,24 @@ export interface CaratsServerEntry {
   culets: Record<string, Culet>
 }
 
-const culets : Record<string, Culet> = {}
+export type CuletArgs<B = Object> = CaratsRequest<B> & { params: Record<string, string> }
 
-export function culet(route: string, culet: Culet) {
-  culets[route] = culet
-  return culet;
+export type Culet<I = any, O = any> = ((request: CuletArgs<I>) => O) & { __isCulet__?: true }
+
+const culets: Record<string, Culet> = {}
+
+export function culet(culet: Culet): Culet
+export function culet(route: string, culet: Culet): Culet
+export function culet(routeOrCulet: string | Culet, culet?: Culet): Culet {
+  if (typeof routeOrCulet === 'string') {
+    culets[routeOrCulet] = culet!
+    culet!.__isCulet__ = true
+    return culet!
+  }
+  if (!routeOrCulet.__isCulet__) {
+    throw new Error('Invalid culet')
+  }
+  return routeOrCulet
 }
 
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
@@ -22,7 +35,7 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
 
   async function getServerProps(req: CaratsRequest, pageComponentResult?: PageComponentResult) {
     const { component, params, route } = pageComponentResult || getPageComponent.call(facets, req.url.replace('/culet', ''))
-    if(!culets[route]) return component.defaultProps
+    if (!culets[route]) return component.defaultProps
     return await culets[route]({ ...req, params })
   }
 

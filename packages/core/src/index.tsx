@@ -10,8 +10,6 @@ export interface CaratsRequest<T = any> {
   data: T
 }
 
-export type Culet<T = any> = (request: CaratsRequest & { params: Record<string, string> }) => T
-
 export function findClosest(fileName: string): string | undefined {
   const extensions = ['.tsx', '.ts', '.jsx', '.js', '']
   let dir = cwd()
