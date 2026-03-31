@@ -14,6 +14,7 @@ const culets : Record<string, Culet> = {}
 
 export function culet(route: string, culet: Culet) {
   culets[route] = culet
+  return culet;
 }
 
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
