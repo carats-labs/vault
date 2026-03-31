@@ -33,7 +33,7 @@ export default async function BuildCarats(facets: Facets) {
     const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
     await clearHydrations()
     try {
-      const { component } = getPageComponent.call(facets, location.pathname)
+      const { component } = getPageComponent.call(facets, location.href)
       let props = component.defaultProps
       if (component.burnished && window.ssp.for !== url) {
           const sspUrl = `/culet${url}`

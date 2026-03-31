@@ -58,7 +58,7 @@ router.all('*splat', async (req: Request, res: Response) => {
     
     if (url.startsWith('/culet/')) {
       const data = await getServerProps(caratsRequest)
-      const { _status, ...payload } = data
+      const { _status, ...payload } = data ?? { _status: 404, message: 'Not Found' }
       return res.status(_status || 200).json(payload)
     }
 

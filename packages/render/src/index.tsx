@@ -25,8 +25,9 @@ export interface PageComponentResult {
   route: string;
 }
 
-export function getPageComponent(this: Facets, path: string): PageComponentResult {
+export function getPageComponent(this: Facets, url: string): PageComponentResult {
   const { routes, suspense } = this;
+  const path = new URL(url, 'http://localhost').pathname;
 
   for (const routePath in routes) {
     const component = routes[routePath];
