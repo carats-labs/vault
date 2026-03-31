@@ -43,10 +43,9 @@ if (!isProduction) {
   router.use(config.base, sirv(clientBase, { extensions: [] }))
 }
 
-const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).default
-
 router.all('*splat', async (req: Request, res: Response) => {
   try {
+    const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).default
     const url = req.originalUrl.replace(config.base, '/')
     const caratsRequest = {
       url,
