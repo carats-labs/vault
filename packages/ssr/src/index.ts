@@ -11,24 +11,15 @@ export interface CaratsServerEntry {
 }
 
 export type CuletArgs = Omit<CaratsRequest, 'data'> & { params: Record<string, string> }
-export type Culet<T = any> = ((request: CuletArgs) => T) & { __isCulet__?: true }
+export type Culet<T = any> = (request: CuletArgs) => T
 
 const culets: Record<string, Culet> = {}
 
 export const seat = <T extends Culet>(f: T) => f;
 
-export function culet<T = any>(culet: Culet<T>): Culet<T>
-export function culet<T = any>(route: string, culet: Culet<T>): Culet<T>
-export function culet<T = any>(routeOrCulet: string | Culet<T>, culet?: Culet<T>): Culet<T> {
-  if (typeof routeOrCulet === 'string') {
-    culets[routeOrCulet] = culet!
-    culet!.__isCulet__ = true
-    return culet!
-  }
-  if (!routeOrCulet.__isCulet__) {
-    throw new Error('Invalid culet')
-  }
-  return routeOrCulet
+export function culet<T = any>(route: string, culet: Culet<T>): Culet<T> {
+  culets[route] = culet
+  return culet
 }
 
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
