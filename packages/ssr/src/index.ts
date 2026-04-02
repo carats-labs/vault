@@ -15,6 +15,8 @@ export type Culet<T = any> = ((request: CuletArgs) => T) & { __isCulet__?: true 
 
 const culets: Record<string, Culet> = {}
 
+export const seat = <T extends Culet>(f: T) => f;
+
 export function culet<T = any>(culet: Culet<T>): Culet<T>
 export function culet<T = any>(route: string, culet: Culet<T>): Culet<T>
 export function culet<T = any>(routeOrCulet: string | Culet<T>, culet?: Culet<T>): Culet<T> {
