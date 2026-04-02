@@ -5,6 +5,7 @@ export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   defaultProps?: T
   head?: string
   burnished?: boolean
+  recast?: boolean
 }
 
 export interface Facets {
@@ -57,7 +58,14 @@ export async function renderPage<T = any>(this: Facets, component: CaratsCompone
   return transpile(component(props));
 }
 
-export function Burnish<T = any>(component: CaratsComponent<T>): CaratsComponent<T> {
+interface BurnishOptions {
+  recast?: boolean;
+}
+
+export function Burnish<T = any>(component: CaratsComponent<T>, options?: BurnishOptions): CaratsComponent<T> {
   component.burnished = true;
+  if (options?.recast) {
+    component.recast = true;
+  }
   return component;
 }

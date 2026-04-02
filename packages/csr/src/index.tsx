@@ -28,7 +28,7 @@ export async function clientRender() {
   try {
     const { component } = getPageComponent.call(_facets, location.href)
     let props = component.defaultProps
-    if (component.burnished && window.ssp.for !== url) {
+    if (component.burnished && (window.ssp.for !== url || component.recast)) {
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
       window.ssp.data = props
