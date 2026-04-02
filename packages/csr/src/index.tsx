@@ -1,5 +1,5 @@
 import { clearHydrations } from '@carats/hooks'
-import { Facets, getPageComponent, renderPage } from '@carats/render'
+import { defineFacets, Facets, getPageComponent, renderPage } from '@carats/render'
 import { init, transpile } from 'jjsx'
 
 declare global {
@@ -14,13 +14,10 @@ declare global {
   }
 }
 
-let _facets: Facets = {} as Facets;
+let _facets: Facets = defineFacets({});
 
 export async function clientRender() {
   const { suspense } = _facets
-  suspense.loading = suspense.loading ?? (() => <>💎 Loading...</>)
-  suspense.error = suspense.error ?? ((error: Error) => <>💎 Error: {error.message}</>)
-  suspense.notFound = suspense.notFound ?? (() => <>💎 Not Found</>)
 
   const url = location.pathname + location.search
   const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
