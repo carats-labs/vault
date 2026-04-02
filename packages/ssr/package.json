@@ -1,6 +1,6 @@
 {
   "name": "@carats/ssr",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "SSR module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -11,14 +11,18 @@ export interface CaratsServerEntry {
 }
 
 export type CuletArgs<B = Object> = CaratsRequest<B> & { params: Record<string, string> }
-
 export type Culet<I = any, O = any> = ((request: CuletArgs<I>) => O) & { __isCulet__?: true }
 
 const culets: Record<string, Culet> = {}
 
 export function culet(culet: Culet): Culet
 export function culet(route: string, culet: Culet): Culet
-export function culet(routeOrCulet: string | Culet, culet?: Culet): Culet {
+
+/**
+ * @template I - Input type - The type of the request.body object
+ * @template O - Output type - The type of culet output
+ */
+export function culet<I = any, O = any>(routeOrCulet: string | Culet<I, O>, culet?: Culet<I, O>): Culet<I, O> {
   if (typeof routeOrCulet === 'string') {
     culets[routeOrCulet] = culet!
     culet!.__isCulet__ = true
