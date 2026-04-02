@@ -14,13 +14,6 @@ declare global {
   }
 }
 
-if (!window.ssp) {
-  window.ssp = {
-    for: undefined,
-    data: null
-  }
-}
-
 let _facets: Facets = {} as Facets;
 
 export async function clientRender() {
@@ -66,6 +59,12 @@ export function goTo(url: string) {
 
 export function mount(facets: Facets) {
   init()
+  if (!window.ssp) {
+    window.ssp = {
+      for: undefined,
+      data: null
+    }
+  }
   _facets = facets
   const { inAppRouting = true } = facets
 
