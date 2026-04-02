@@ -4,7 +4,7 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import { ViteDevServer } from 'vite'
 
-export const router: Router = Router()
+const router: Router = Router()
 const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path)
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -84,3 +84,5 @@ router.all('*splat', async (req: Request, res: Response) => {
     }
   }
 })
+
+export const carats = () => router
