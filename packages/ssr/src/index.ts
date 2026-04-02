@@ -10,7 +10,7 @@ export interface CaratsServerEntry {
   culets: Record<string, Culet>
 }
 
-export type CuletArgs = CaratsRequest<never> & { params: Record<string, string> }
+export type CuletArgs = Omit<CaratsRequest, 'data'> & { params: Record<string, string> }
 export type Culet<T = any> = ((request: CuletArgs) => T) & { __isCulet__?: true }
 
 const culets: Record<string, Culet> = {}
