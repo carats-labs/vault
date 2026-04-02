@@ -4,24 +4,20 @@ import { parseUrl } from '@carats/url';
 import { init, transpile } from 'jjsx'
 
 export interface CaratsServerEntry {
-  render: (req: CaratsRequest) => Promise<{ html?: string; head?: string }>
-  getServerProps: <T = any>(req: CaratsRequest) => Promise<T> | T
+  render: (req: CaratsRequest<never>) => Promise<{ html?: string; head?: string }>
+  getServerProps: <T = any>(req: CaratsRequest<never>) => Promise<T> | T
   facets: Facets
   culets: Record<string, Culet>
 }
 
-export type CuletArgs<B = Object> = CaratsRequest<B> & { params: Record<string, string> }
-export type Culet<I = any, O = any> = ((request: CuletArgs<I>) => O) & { __isCulet__?: true }
+export type CuletArgs = CaratsRequest<never> & { params: Record<string, string> }
+export type Culet<T = any> = ((request: CuletArgs) => T) & { __isCulet__?: true }
 
 const culets: Record<string, Culet> = {}
 
-/**
- * @template I - Input type - The type of the request.body object
- * @template O - Output type - The type of culet output
- */
-export function culet<I = any, O = any>(culet: Culet<I, O>): Culet<I, O>
-export function culet<I = any, O = any>(route: string, culet: Culet<I, O>): Culet<I, O>
-export function culet<I = any, O = any>(routeOrCulet: string | Culet<I, O>, culet?: Culet<I, O>): Culet<I, O> {
+export function culet<T = any>(culet: Culet<T>): Culet<T>
+export function culet<T = any>(route: string, culet: Culet<T>): Culet<T>
+export function culet<T = any>(routeOrCulet: string | Culet<T>, culet?: Culet<T>): Culet<T> {
   if (typeof routeOrCulet === 'string') {
     culets[routeOrCulet] = culet!
     culet!.__isCulet__ = true
@@ -36,13 +32,13 @@ export function culet<I = any, O = any>(routeOrCulet: string | Culet<I, O>, cule
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
   init()
 
-  async function getServerProps(req: CaratsRequest, pageComponentResult?: PageComponentResult) {
+  async function getServerProps(req: CaratsRequest<never>, pageComponentResult?: PageComponentResult) {
     const { component, params, route } = pageComponentResult || getPageComponent.call(facets, req.url.replace('/culet', ''))
     if (!culets[route]) return component.defaultProps
     return await culets[route]({ ...req, params })
   }
 
-  async function render(req: CaratsRequest) {
+  async function render(req: CaratsRequest<never>) {
     const {
       suspense: {
         error: ErrorPage
