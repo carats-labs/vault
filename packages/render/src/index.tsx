@@ -3,7 +3,7 @@ import { transpile } from "jjsx"
 
 export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   defaultProps?: T
-  head?: string
+  head?: JSX.Element
   burnished?: boolean
   recast?: boolean
 }
@@ -71,7 +71,7 @@ export function getPageComponent(this: Facets, url: string): PageComponentResult
 }
 
 export async function renderPage<T = any>(this: Facets, component: CaratsComponent<T>, props: T): Promise<string> {
-  return transpile(component(props))
+  return transpile(component.call(component, props))
 }
 
 interface BurnishOptions {

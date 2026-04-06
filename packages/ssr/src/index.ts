@@ -37,12 +37,15 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
         error: ErrorPage
       }
     } = facets
-    const pcr = getPageComponent.call(facets, req.url)
+    const pageComponentResult = getPageComponent.call(facets, req.url)
     const { path } = parseUrl(req.url);
-    const props = await getServerProps(req, pcr)
-    const { component } = pcr
-    let head = component.head || ''
-    head += '\n' + `<script>window.ssp=${JSON.stringify({ for: path, data: props })}</script>`
+    const props = await getServerProps(req, pageComponentResult)
+    const { component } = pageComponentResult
+    let head = ''
+    if (component.head) {
+      head = transpile(component.head)
+    }
+    head += `<script>window.carats={crown:${head},ssp:${JSON.stringify({ for: path, data: props })}}</script>`
     head = head.trim()
     const html = await renderPage.call(facets, component, props);
     try {

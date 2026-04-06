@@ -7,9 +7,12 @@ declare global {
     _isHandled: boolean
   }
   interface Window {
-    ssp: {
-      for: string | undefined,
-      data: any
+    carats: {
+      ssp: {
+        for: string | undefined,
+        data: any
+      }
+      crown?: string
     }
   }
 }
@@ -25,14 +28,25 @@ export async function clientRender() {
   try {
     const { component } = getPageComponent.call(_facets, location.href)
     let props = component.defaultProps
-    if (component.burnished && (window.ssp.for !== url || component.recast)) {
+    if (component.burnished && (window.carats.ssp.for !== url || component.recast)) {
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
-      window.ssp.data = props
-      window.ssp.for = url
+      window.carats.ssp.data = props
+      window.carats.ssp.for = url
     } else {
-      props = window.ssp.data
+      props = window.carats.ssp.data
     }
+    let dynamicHead = ''
+    if (component.head) {
+      dynamicHead = transpile(component.head)
+    }
+    if (window.carats.crown) {
+      document.head.innerHTML = document.head.innerHTML.replace(window.carats.crown, dynamicHead)
+    } else {
+      document.head.innerHTML += dynamicHead
+    }
+    window.carats.crown = dynamicHead
+
     const html = await renderPage.call(_facets, component, props)
     document.getElementById("app")!.innerHTML = html
   } catch (error) {
@@ -56,10 +70,12 @@ export function goTo(url: string) {
 
 export function mount(facets: Facets) {
   init()
-  if (!window.ssp) {
-    window.ssp = {
-      for: undefined,
-      data: null
+  if (!window.carats) {
+    window.carats = {
+      ssp: {
+        for: undefined,
+        data: null
+      }
     }
   }
   _facets = facets
