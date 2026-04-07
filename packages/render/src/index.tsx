@@ -8,6 +8,8 @@ export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
   recast?: boolean
 }
 
+export type CaratsComponentWithThis<T = any> = ((this: CaratsComponent<T>, props: T) => JSX.Element) & CaratsComponent<T>
+
 export interface Facets {
   inAppRouting?: boolean
   routes: Record<string, CaratsComponent>
@@ -78,7 +80,7 @@ interface BurnishOptions {
   recast?: boolean
 }
 
-export function Burnish<T = any>(this: CaratsComponent<T>, component: CaratsComponent<T>, options?: BurnishOptions): CaratsComponent<T> {
+export function Burnish<T = any>(component: CaratsComponentWithThis<T>, options?: BurnishOptions): CaratsComponent<T> {
   component.burnished = true
   if (options?.recast) {
     component.recast = true
