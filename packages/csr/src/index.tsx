@@ -1,4 +1,4 @@
-import { clearHydrations } from '@carats/hooks'
+import { clearHydrations, hydrate } from '@carats/hooks'
 import { defineFacets, Facets, getPageComponent, renderPage } from '@carats/render'
 import { init, transpile } from 'jjsx'
 
@@ -36,16 +36,18 @@ export async function clientRender() {
     } else {
       props = window.carats.ssp.data
     }
-    let dynamicHead = ''
-    if (component.head) {
-      dynamicHead = transpile(component.head)
-    }
-    if (window.carats.crown) {
-      document.head.innerHTML = document.head.innerHTML.replace(window.carats.crown, dynamicHead)
-    } else {
-      document.head.innerHTML += dynamicHead
-    }
-    window.carats.crown = dynamicHead
+    hydrate(() => {
+      let dynamicHead = ''
+      if (component.head) {
+        dynamicHead = transpile(component.head)
+      }
+      if (window.carats.crown) {
+        document.head.innerHTML = document.head.innerHTML.replace(window.carats.crown, dynamicHead)
+      } else {
+        document.head.innerHTML += dynamicHead
+      }
+      window.carats.crown = dynamicHead
+    })
 
     const html = await renderPage.call(_facets, component, props)
     document.getElementById("app")!.innerHTML = html
