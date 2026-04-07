@@ -43,9 +43,9 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     const { component } = pageComponentResult
     let dynamicHead = ''
     if (component.head) {
-      dynamicHead = '\n'+transpile(component.head)
+      dynamicHead = transpile(component.head)
     }
-    const head = `<script>window.carats={crown:${JSON.stringify(dynamicHead)},ssp:${JSON.stringify({ for: path, data: props })}}</script>${dynamicHead}`
+    const head = `<script>window.carats={crown:${JSON.stringify(dynamicHead)},ssp:${JSON.stringify({ for: path, data: props })}}</script>${dynamicHead ? '\n' + dynamicHead : ''}`
     const html = await renderPage.call(facets, component, props);
     try {
       return {
