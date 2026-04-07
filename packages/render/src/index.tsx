@@ -78,10 +78,10 @@ interface BurnishOptions {
   recast?: boolean
 }
 
-export function Burnish<T = any>(component: CaratsComponent<T>, options?: BurnishOptions): CaratsComponent<T> {
+export function Burnish<T = any>(this: CaratsComponent<T>, component: CaratsComponent<T>, options?: BurnishOptions): CaratsComponent<T> {
   component.burnished = true
   if (options?.recast) {
     component.recast = true
   }
-  return component
+  return component.bind(component)
 }
