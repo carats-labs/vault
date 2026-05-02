@@ -2,7 +2,6 @@
 import { findClosest } from "@carats/core";
 import { Facets } from "@carats/render";
 import { mkdirSync, writeFileSync } from "fs";
-import { Server } from "http";
 import { AddressInfo } from "net";
 import { dirname, join } from "path";
 
@@ -30,7 +29,8 @@ async function main() {
     .keys(facets.routes)
     .filter(p => !p.includes('/:'));
 
-  const app: Server = (await import(appFile)).default;
+  const appModule = await import(appFile);
+  const { server: app } = await appModule.default;
   const { port }: AddressInfo = app.address() as AddressInfo;
 
   const ORIGIN = `http://localhost:${port}`

@@ -45,7 +45,7 @@ if (!isProduction) {
 
 router.all('*splat', async (req: Request, res: Response) => {
   try {
-    const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).default
+    const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).segments
     const url = req.originalUrl.replace(config.base, '/')
     const caratsRequest = {
       url,
