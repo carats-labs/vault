@@ -1,7 +1,7 @@
-import { CaratsRequest } from '@carats/core'
-import { Facets, getPageComponent, PageComponentResult, renderPage } from '@carats/render'
+import { CaratsRequest } from '@carats/core';
+import { Facets, getPageComponent, PageComponentResult, renderPage } from '@carats/render';
 import { parseUrl } from '@carats/url';
-import { init, transpile } from 'jjsx'
+import { init, transpile } from 'jjsx';
 
 export interface CaratsServerEntry {
   render: (req: CaratsRequest<never>) => Promise<{ html?: string; head?: string }>
@@ -32,20 +32,19 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
   }
 
   async function render(req: CaratsRequest<never>) {
-    const {
-      suspense: {
-        error: ErrorPage
-      }
-    } = facets
     const pageComponentResult = getPageComponent.call(facets, req.url)
     const { path } = parseUrl(req.url);
     const props = await getServerProps(req, pageComponentResult)
-    const { component } = pageComponentResult
-    let dynamicHead = ''
+    const component = pageComponentResult.component
+    let head = '$carats_state$carats_dynamic'
+    const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
+    let $carats_dynamic = ''
     if (component.head) {
-      dynamicHead = transpile(component.head)
+      $carats_dynamic = transpile(component.head)
     }
-    const head = `<script>window.carats={crown:${JSON.stringify(dynamicHead)},ssp:${JSON.stringify({ for: path, data: props })}}</script>${dynamicHead ? '\n' + dynamicHead : ''}`
+    head = head
+      .replace('$carats_state', $carats_state)
+      .replace('$carats_dynamic', $carats_dynamic)
     const html = await renderPage.call(facets, component, props);
     try {
       return {
@@ -53,8 +52,9 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
         head
       }
     } catch (error) {
+      const errorPage = facets.suspense.error
       return {
-        html: transpile(ErrorPage(error as Error)),
+        html: transpile(errorPage(error as Error)),
         head
       }
     }

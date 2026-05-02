@@ -1,7 +1,9 @@
 import { matchRoute } from "@carats/url"
 import { transpile } from "jjsx"
 
-export interface CaratsComponent<T = any> extends JSX.FunctionComponent<T> {
+type CaratsFunction<T> = (this: CaratsComponent, ...args: T[]) => JSX.Element | Promise<JSX.Element>
+
+export interface CaratsComponent<T = any> extends CaratsFunction<T> {
   defaultProps?: T
   head?: JSX.Element
   burnished?: boolean
@@ -49,31 +51,21 @@ export function getPageComponent(this: Facets, url: string): PageComponentResult
   const path = new URL(url, 'http://localhost').pathname
 
   for (const routePath in routes) {
-    const component = routes[routePath]
     const matchedParams = matchRoute(routePath, path)
     if (matchedParams) {
-      if (component instanceof Promise) {
-        const SuspenseComponent = () => {
-          const suspenseId = `carats-suspense-${routePath}`
-          component
-            .then((e: JSX.Element) => {
-              document.getElementById(suspenseId)?.replaceWith(transpile(e))
-            })
-            .catch((error: Error) => {
-              document.getElementById(suspenseId)?.replaceWith(transpile(suspense.error(error)))
-            })
-          return <div id={suspenseId}>{suspense.loading()}</div>
-        }
-        return { component: SuspenseComponent, params: matchedParams, route: routePath }
+      return {
+        component: routes[routePath],
+        params: matchedParams,
+        route: routePath
       }
-      return { component: component, params: matchedParams, route: routePath }
     }
   }
   return { component: suspense.notFound, params: {}, route: '/not-found' }
 }
 
 export async function renderPage<T = any>(this: Facets, component: CaratsComponent<T>, props: T): Promise<string> {
-  return transpile(component.call(component, props))
+  const element = await component.call(component, props);
+  return transpile(element);
 }
 
 interface BurnishOptions {

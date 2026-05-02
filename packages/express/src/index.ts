@@ -2,10 +2,10 @@ import { findClosest } from '@carats/core'
 import { Request, Response, Router } from 'express'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { ViteDevServer } from 'vite'
+import type { ViteDevServer } from 'vite'
 
 const router: Router = Router()
-const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path)
+const loader = (path: string) => isProduction ? import(path) : vite.ssrLoadModule(path, { fixStacktrace: true })
 
 const isProduction = process.env.NODE_ENV === 'production'
 const config = {
@@ -15,11 +15,11 @@ const config = {
   }
 }
 
-const _clientBaseDir = isProduction ? 'dist/client' : 'src/client'
+const _clientBaseDir = './client'
 const clientBase = findClosest(_clientBaseDir)
 if (!clientBase) throw new Error('Can not find client base directory: ' + _clientBaseDir)
 
-const _serverBaseDir = isProduction ? 'dist/server' : 'src/server'
+const _serverBaseDir = './server'
 const serverBase = findClosest(_serverBaseDir)
 
 if (!serverBase) throw new Error('Can not find server base directory: ' + _serverBaseDir)
@@ -75,7 +75,6 @@ router.all('*splat', async (req: Request, res: Response) => {
   }
   catch (e) {
     if (e instanceof Error) {
-      vite?.ssrFixStacktrace(e)
       console.error(e.stack)
       res.status(500).end(e.stack)
     } else {

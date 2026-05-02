@@ -12,7 +12,6 @@ declare global {
         for: string | undefined,
         data: any
       }
-      crown?: string
     }
   }
 }
@@ -20,8 +19,6 @@ declare global {
 let _facets: Facets = defineFacets({});
 
 export async function clientRender() {
-  const { suspense } = _facets
-
   const url = location.pathname + location.search
   const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
   await clearHydrations()
@@ -37,22 +34,24 @@ export async function clientRender() {
       props = window.carats.ssp.data
     }
     hydrate(() => {
-      let dynamicHead = ''
-      if (component.head) {
-        dynamicHead = transpile(component.head)
-      }
-      if (window.carats.crown) {
-        document.head.innerHTML = document.head.innerHTML.replace(window.carats.crown, dynamicHead)
-      } else {
-        document.head.innerHTML += dynamicHead
-      }
-      window.carats.crown = dynamicHead
+      if (!component.head) return
+      const headStart = document.getElementById('carats-crown-start')
+      if (!headStart) throw Error('carats-crown-start is not mounted')
+      const headEnd = document.getElementById('carats-crown-end')
+      if (!headEnd) throw Error('carats-crown-end is not mounted')
+      const range = document.createRange()
+      range.setStartAfter(headStart)
+      range.setEndBefore(headEnd)
+      range.deleteContents()
+      const fragment = range.createContextualFragment(transpile(component.head))
+      headStart.after(fragment)
     })
 
     const html = await renderPage.call(_facets, component, props)
     document.getElementById("app")!.innerHTML = html
   } catch (error) {
-    document.getElementById("app")!.innerHTML = transpile(suspense.error(error as Error))
+    const errorElement = transpile(_facets.suspense.error(error as Error))
+    document.getElementById("app")!.innerHTML = errorElement
   } finally {
     clearTimeout(loaderTimer)
     window.dispatchEvent(new Event("load"))
