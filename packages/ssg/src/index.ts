@@ -18,8 +18,8 @@ async function main() {
   }
 
   const appModule = await import(appFile);
-  const { server: app, segments: { facets } } = await appModule.default;
-  const { port }: AddressInfo = app.address() as AddressInfo;
+  const { server, segments: { facets } } = await appModule.default;
+  const { port }: AddressInfo = server.address();
   const staticRoutes = Object
     .keys(facets.routes)
     .filter(p => !p.includes('/:'));
