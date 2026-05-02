@@ -11,9 +11,9 @@ async function main() {
     console.error('Could not find facets file (src/client/facets.cara.ts)')
     process.exit(1)
   }
-  const appFile = findClosest('src/app.ts');
+  const appFile = findClosest('dist/app');
   if (!appFile) {
-    console.error('Could not find app file (src/app.ts)')
+    console.error('Could not find app file (dist/app), please run build command first')
     process.exit(1)
   }
   const closestClientBuildDir = findClosest('dist/client');
