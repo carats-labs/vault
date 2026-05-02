@@ -36,6 +36,7 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     const { path } = parseUrl(req.url);
     const props = await getServerProps(req, pageComponentResult)
     const component = pageComponentResult.component
+    const html = await renderPage.call(facets, component, props);
     let head = '$carats_state$carats_dynamic'
     const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
     let $carats_dynamic = ''
@@ -45,7 +46,6 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     head = head
       .replace('$carats_state', $carats_state)
       .replace('$carats_dynamic', $carats_dynamic)
-    const html = await renderPage.call(facets, component, props);
     try {
       return {
         html,
