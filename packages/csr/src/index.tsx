@@ -19,18 +19,23 @@ declare global {
 let _facets: Facets = defineFacets({});
 
 export async function clientRender() {
+  if(typeof window === 'undefined') return
   const url = location.pathname + location.search
   const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
   await clearHydrations()
   try {
-    const { component } = getPageComponent.call(_facets, location.href)
+    const { component, params } = getPageComponent.call(_facets, location.href)
     let props = component.defaultProps
     if (component.burnished && (window.carats.ssp.for !== url || component.recast)) {
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
       window.carats.ssp.data = props
       window.carats.ssp.for = url
-    } else {
+    }
+    else if (window.carats.ssp.for !== url){
+      props = params || component.defaultProps
+    }
+    else {
       props = window.carats.ssp.data
     }
     hydrate(() => {
@@ -71,6 +76,8 @@ export function goTo(url: string) {
 
 export function mount(facets: Facets) {
   init()
+  _facets = facets
+  
   if (!window.carats) {
     window.carats = {
       ssp: {
@@ -79,7 +86,6 @@ export function mount(facets: Facets) {
       }
     }
   }
-  _facets = facets
   const { inAppRouting = true } = facets
 
   if (inAppRouting) {
@@ -99,4 +105,5 @@ export function mount(facets: Facets) {
     })
     window.addEventListener("popstate", clientRender)
   }
+  return facets;
 }

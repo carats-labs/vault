@@ -1,16 +1,10 @@
 #!/usr/bin/env bun
 import { findClosest } from "@carats/core";
-import { Facets } from "@carats/render";
 import { mkdirSync, writeFileSync } from "fs";
 import { AddressInfo } from "net";
 import { dirname, join } from "path";
 
 async function main() {
-  const facetsFile = findClosest('src/client/facets.cara.ts');
-  if (!facetsFile) {
-    console.error('Could not find facets file (src/client/facets.cara.ts)')
-    process.exit(1)
-  }
   const appFile = findClosest('dist/app');
   if (!appFile) {
     console.error('Could not find app file (dist/app), please run build command first')
@@ -23,15 +17,12 @@ async function main() {
     process.exit(1)
   }
 
-  const facetsModule = await import(facetsFile);
-  const facets = facetsModule.default as Facets;
+  const appModule = await import(appFile);
+  const { server: app, segments: { facets } } = await appModule.default;
+  const { port }: AddressInfo = app.address() as AddressInfo;
   const staticRoutes = Object
     .keys(facets.routes)
     .filter(p => !p.includes('/:'));
-
-  const appModule = await import(appFile);
-  const { server: app } = await appModule.default;
-  const { port }: AddressInfo = app.address() as AddressInfo;
 
   const ORIGIN = `http://localhost:${port}`
 
