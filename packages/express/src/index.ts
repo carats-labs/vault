@@ -15,14 +15,13 @@ const config = {
   }
 }
 
-const _clientBaseDir = './client'
-const clientBase = findClosest(_clientBaseDir)
-if (!clientBase) throw new Error('Can not find client base directory: ' + _clientBaseDir)
+const altPathPrefix = isProduction ? 'dist' : 'src'
 
-const _serverBaseDir = './server'
-const serverBase = findClosest(_serverBaseDir)
+const clientBase = findClosest('./client') || findClosest(`./${altPathPrefix}/client`)
+if (!clientBase) throw new Error('Can not find client base directory')
 
-if (!serverBase) throw new Error('Can not find server base directory: ' + _serverBaseDir)
+const serverBase = findClosest('./server') || findClosest(`./${altPathPrefix}/server`)
+if (!serverBase) throw new Error('Can not find server base directory')
 
 const templateHtml = isProduction
   ? readFileSync(join(clientBase, 'index.html'), 'utf-8')
@@ -45,7 +44,7 @@ if (!isProduction) {
 
 router.all('*splat', async (req: Request, res: Response) => {
   try {
-    const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).segments
+    const { getServerProps, render } = (await loader(join(serverBase, 'entrypoint'))).default
     const url = req.originalUrl.replace(config.base, '/')
     const caratsRequest = {
       url,

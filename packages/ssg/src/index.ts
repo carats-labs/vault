@@ -10,6 +10,11 @@ async function main() {
     console.error('Could not find app file (dist/app), please run build command first')
     process.exit(1)
   }
+  const serverEntrypointFile = findClosest('dist/server/entrypoint');
+  if (!serverEntrypointFile) {
+    console.error('Could not find server entrypoint file (dist/server/entrypoint), please run build command first')
+    process.exit(1)
+  }
   const closestClientBuildDir = findClosest('dist/client');
 
   if (!closestClientBuildDir) {
@@ -18,7 +23,10 @@ async function main() {
   }
 
   const appModule = await import(appFile);
-  const { server, segments: { facets } } = await appModule.default;
+  const server = appModule.default;
+  const entrypointModule = await import(serverEntrypointFile);
+  const { facets } = entrypointModule.default;
+  
   const { port }: AddressInfo = server.address();
   const staticRoutes = Object
     .keys(facets.routes)
