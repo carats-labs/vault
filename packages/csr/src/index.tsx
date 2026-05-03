@@ -26,7 +26,10 @@ export async function clientRender() {
   try {
     const { component, params } = getPageComponent.call(_facets, location.href)
     let props = component.defaultProps
+    let loading = false
     if (component.burnished && (window.carats.ssp.for !== url || component.recast)) {
+      loading = true
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(_facets.suspense.loading()))
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
       window.carats.ssp.data = props
@@ -39,11 +42,12 @@ export async function clientRender() {
       props = window.carats.ssp.data
     }
     let element = component.call(component, props)
-    if (element instanceof Promise) {
-      document.getElementById("app")!.innerHTML = transpile(_facets.suspense.loading())
-      element = await element
+    if (element instanceof Promise && !loading) {
+      loading = true
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(_facets.suspense.loading()))
     }
-    hydrate(() => {
+    element = await element
+    hydrate(async () => {
       if (!component.head) return
       const headStart = document.getElementById('carats-crown-start')
       if (!headStart) throw Error('carats-crown-start is not mounted')
@@ -53,14 +57,14 @@ export async function clientRender() {
       range.setStartAfter(headStart)
       range.setEndBefore(headEnd)
       range.deleteContents()
-      const fragment = range.createContextualFragment(transpile(component.head))
+      const fragment = range.createContextualFragment(await transpile(Promise.resolve(component.head)))
       headStart.after(fragment)
     })
 
-    const html = transpile(element)
+    const html = await transpile(Promise.resolve(element))
     document.getElementById("app")!.innerHTML = html
   } catch (error) {
-    const errorElement = transpile(_facets.suspense.error(error as Error))
+    const errorElement = await transpile(Promise.resolve(_facets.suspense.error(error as Error)))
     document.getElementById("app")!.innerHTML = errorElement
   } finally {
     clearTimeout(loaderTimer)

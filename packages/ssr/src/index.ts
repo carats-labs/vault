@@ -37,12 +37,12 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     const props = await getServerProps(req, pageComponentResult)
     const component = pageComponentResult.component
     const element = await component.call(component, props)
-    const html = transpile(element)
+    const html = await transpile(Promise.resolve(element))
     let head = '$carats_state$carats_dynamic'
     const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
     let $carats_dynamic = ''
     if (component.head) {
-      $carats_dynamic = transpile(component.head)
+      $carats_dynamic = await transpile(Promise.resolve(component.head))
     }
     head = head
       .replace('$carats_state', $carats_state)
@@ -55,7 +55,7 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     } catch (error) {
       const errorPage = facets.suspense.error
       return {
-        html: transpile(errorPage(error as Error)),
+        html: await transpile(Promise.resolve(errorPage(error as Error))),
         head
       }
     }
