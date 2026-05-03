@@ -1,5 +1,5 @@
 import { clearHydrations, hydrate } from '@carats/hooks'
-import { defineFacets, Facets, getPageComponent, renderPage } from '@carats/render'
+import { defineFacets, Facets, getPageComponent } from '@carats/render'
 import { init, transpile } from 'jjsx'
 
 declare global {
@@ -19,7 +19,7 @@ declare global {
 let _facets: Facets = defineFacets({});
 
 export async function clientRender() {
-  if(typeof window === 'undefined') return
+  if (typeof window === 'undefined') return
   const url = location.pathname + location.search
   const loaderTimer = setTimeout(() => document.getElementById("loading-indicator")?.classList.remove("hide"), 250)
   await clearHydrations()
@@ -32,11 +32,16 @@ export async function clientRender() {
       window.carats.ssp.data = props
       window.carats.ssp.for = url
     }
-    else if (window.carats.ssp.for !== url){
+    else if (window.carats.ssp.for !== url) {
       props = params || component.defaultProps
     }
     else {
       props = window.carats.ssp.data
+    }
+    let element = component.call(component, props)
+    if (element instanceof Promise) {
+      document.getElementById("app")!.innerHTML = transpile(_facets.suspense.loading())
+      element = await element
     }
     hydrate(() => {
       if (!component.head) return
@@ -52,7 +57,7 @@ export async function clientRender() {
       headStart.after(fragment)
     })
 
-    const html = await renderPage.call(_facets, component, props)
+    const html = transpile(element)
     document.getElementById("app")!.innerHTML = html
   } catch (error) {
     const errorElement = transpile(_facets.suspense.error(error as Error))
@@ -77,7 +82,7 @@ export function goTo(url: string) {
 export function mount(facets: Facets) {
   init()
   _facets = facets
-  
+
   if (!window.carats) {
     window.carats = {
       ssp: {
