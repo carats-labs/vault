@@ -1,5 +1,5 @@
 import { CaratsRequest } from '@carats/core';
-import { Facets, getPageComponent, PageComponentResult, renderPage } from '@carats/render';
+import { Facets, getPageComponent, PageComponentResult } from '@carats/render';
 import { parseUrl } from '@carats/url';
 import { init, transpile } from 'jjsx';
 
@@ -36,7 +36,8 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
     const { path } = parseUrl(req.url);
     const props = await getServerProps(req, pageComponentResult)
     const component = pageComponentResult.component
-    const html = await renderPage.call(facets, component, props);
+    const element = await component.call(component, props)
+    const html = transpile(element)
     let head = '$carats_state$carats_dynamic'
     const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
     let $carats_dynamic = ''
