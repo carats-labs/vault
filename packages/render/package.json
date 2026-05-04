@@ -1,6 +1,6 @@
 {
   "name": "@carats/render",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Render module for Carats",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,6 +15,6 @@
   },
   "peerDependencies": {
     "@carats/url": "^0.0.1",
-    "jjsx": "^3.3.0"
+    "jjsx": "^4.0.0"
   }
 }

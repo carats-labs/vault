@@ -1,5 +1,4 @@
 import { matchRoute } from "@carats/url"
-import { transpile } from "jjsx"
 
 type CaratsFunction<T> = (this: CaratsComponent, ...args: T[]) => JSX.Element | Promise<JSX.Element>
 
@@ -61,11 +60,6 @@ export function getPageComponent(this: Facets, url: string): PageComponentResult
     }
   }
   return { component: suspense.notFound, params: {}, route: '/not-found' }
-}
-
-export async function renderPage<T = any>(this: Facets, component: CaratsComponent<T>, props: T): Promise<string> {
-  const element = await component.call(component, props);
-  return transpile(element);
 }
 
 interface BurnishOptions {
