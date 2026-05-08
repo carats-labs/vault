@@ -7,6 +7,7 @@ export interface CaratsComponent<T = any> extends CaratsFunction<T> {
   head?: JSX.Element
   burnished?: boolean
   recast?: boolean
+  frame?: () => JSX.Element
 }
 
 export type CaratsComponentWithThis<T = any> = ((this: CaratsComponent<T>, props: T) => JSX.Element) & CaratsComponent<T>

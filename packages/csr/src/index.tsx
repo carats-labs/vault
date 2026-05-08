@@ -27,9 +27,10 @@ export async function clientRender() {
     const { component, params } = getPageComponent.call(_facets, location.href)
     let props = component.defaultProps
     let loading = false
+    const loadingComponent = component.frame ?? _facets.suspense.loading
     if (component.burnished && (window.carats.ssp.for !== url || component.recast)) {
       loading = true
-      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(_facets.suspense.loading()))
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent()))
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
       window.carats.ssp.data = props
@@ -44,7 +45,7 @@ export async function clientRender() {
     let element = component.call(component, props)
     if (element instanceof Promise && !loading) {
       loading = true
-      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(_facets.suspense.loading()))
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent()))
     }
     element = await element
     hydrate(async () => {
