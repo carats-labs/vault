@@ -1,6 +1,6 @@
 import { clearHydrations, hydrate } from '@carats/hooks'
 import { defineFacets, Facets, getPageComponent } from '@carats/render'
-import { init, transpile } from 'jjsx'
+import { transpile } from 'jjsx'
 
 declare global {
   interface HTMLAnchorElement {
@@ -85,7 +85,6 @@ export function goTo(url: string) {
 }
 
 export function mount(facets: Facets) {
-  init()
   _facets = facets
 
   if (!window.carats) {

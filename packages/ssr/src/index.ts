@@ -1,7 +1,7 @@
 import { CaratsRequest } from '@carats/core';
 import { Facets, getPageComponent, PageComponentResult } from '@carats/render';
 import { parseUrl } from '@carats/url';
-import { init, transpile } from 'jjsx';
+import { transpile } from 'jjsx';
 
 export interface CaratsServerEntry {
   render: (req: CaratsRequest<never>) => Promise<{ html?: string; head?: string }>
@@ -23,8 +23,6 @@ export function culet<T = any>(route: string, culet: Culet<T>): Culet<T> {
 }
 
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
-  init()
-
   async function getServerProps(req: CaratsRequest<never>, pageComponentResult?: PageComponentResult) {
     const { component, params, route } = pageComponentResult || getPageComponent.call(facets, req.url.replace('/culet', ''))
     if (!culets[route]) return component.defaultProps
