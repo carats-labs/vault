@@ -11,13 +11,13 @@ export interface CaratsServerEntry {
 }
 
 export type CuletArgs = Omit<CaratsRequest, 'data'> & { params: Record<string, string> }
-export type Culet<T = any> = (request: CuletArgs) => T
+export type Culet<T extends Object = any> = (request: CuletArgs) => T
 
 const culets: Record<string, Culet> = {}
 
 export const seat = <T extends Culet>(f: T) => f;
 
-export function culet<T = any>(route: string, culet: Culet<T>): Culet<T> {
+export function culet<T extends Object = any>(route: string, culet: Culet<T>): Culet<T> {
   culets[route] = culet
   return culet
 }
@@ -25,7 +25,7 @@ export function culet<T = any>(route: string, culet: Culet<T>): Culet<T> {
 export function defineServerEntry(facets: Facets): CaratsServerEntry {
   async function getServerProps(req: CaratsRequest<never>, pageComponentResult?: PageComponentResult) {
     const { component, params, route } = pageComponentResult || getPageComponent.call(facets, req.url.replace('/culet', ''))
-    if (!culets[route]) return component.defaultProps
+    if (!culets[route]) return { ...params, ...component.defaultProps }
     return await culets[route]({ ...req, params })
   }
 

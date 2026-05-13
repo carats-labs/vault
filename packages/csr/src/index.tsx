@@ -1,4 +1,4 @@
-import { clearHydrations, hydrate } from '@carats/hooks'
+import { clearHydrations, hydrate, type State } from '@carats/hooks'
 import { defineFacets, Facets, getPageComponent } from '@carats/render'
 import { transpile } from 'jjsx'
 
@@ -17,6 +17,10 @@ declare global {
 }
 
 let _facets: Facets = defineFacets({});
+
+function isState(value: any): value is State<any> {
+  return 'subscribe' in value;
+}
 
 export async function clientRender() {
   if (typeof window === 'undefined') return
@@ -37,7 +41,7 @@ export async function clientRender() {
       window.carats.ssp.for = url
     }
     else if (window.carats.ssp.for !== url) {
-      props = params || component.defaultProps
+      props = { ...params, ...component.defaultProps }
     }
     else {
       props = window.carats.ssp.data
@@ -60,6 +64,12 @@ export async function clientRender() {
       range.deleteContents()
       const fragment = range.createContextualFragment(await transpile(Promise.resolve(component.head)))
       headStart.after(fragment)
+      const unsubRender = isState(props) ? props.subscribe(() => {
+        window.carats.ssp.data = props
+        window.carats.ssp.for = url
+        clientRender()
+      }) : undefined
+      return () => unsubRender?.()
     })
 
     const html = await transpile(Promise.resolve(element))

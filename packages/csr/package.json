@@ -1,6 +1,6 @@
 {
   "name": "@carats/csr",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "main": "dist/index.js",
   "peerDependencies": {
     "@carats/hooks": "^0.0.2",

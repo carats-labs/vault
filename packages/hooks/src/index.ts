@@ -32,13 +32,13 @@ export function onMount(callback: HydrationCallback) {
 type Getter<T> = () => T
 type Factory<T> = (currentValue: T) => T
 type Setter<T> = {
-  (fn: Factory<T>): void
-  (value: T): void
+  (fn: Factory<T>): T
+  (value: T): T
 }
 type Subscriber<T> = (value: T) => void
 type Subscribe<T> = (subsriber: Subscriber<T>) => () => void
 
-type State<T> = {
+export type State<T> = {
   get: Getter<T>
   set: Setter<T>
   subscribe: Subscribe<T>
@@ -63,6 +63,7 @@ export function use<T>(initialState?: T) {
       state = newStateOrFn
     }
     subscribers.forEach(subscriber => subscriber(state))
+    return state
   }
 
   const subscribe = (fn: (newState: T) => void) => {

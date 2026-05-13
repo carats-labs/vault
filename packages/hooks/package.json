@@ -1,6 +1,6 @@
 {
   "name": "@carats/hooks",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "description": "Hooks module for Carats",
   "files": ["dist"],
