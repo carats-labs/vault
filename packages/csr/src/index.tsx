@@ -1,4 +1,4 @@
-import { clearHydrations, hydrate, type State } from '@carats/hooks'
+import { clearHydrations, afterMount, type State } from '@carats/hooks'
 import { defineFacets, Facets, getPageComponent } from '@carats/render'
 import { transpile } from 'jjsx'
 
@@ -52,7 +52,7 @@ export async function clientRender() {
       document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent()))
     }
     element = await element
-    hydrate(async () => {
+    afterMount(async () => {
       if (!component.head) return
       const headStart = document.getElementById('carats-crown-start')
       if (!headStart) throw Error('carats-crown-start is not mounted')

@@ -4,13 +4,17 @@ export type HydrationCallback = () => MaybePromise<ClearCallback | void>
 
 const cleanUps: ClearCallback[] = []
 
-export function hydrate(callback: HydrationCallback) {
+function handleClearCallback(callback: ClearCallback | void) {
+  if (callback) {
+    cleanUps.push(callback)
+  }
+}
+
+export function afterMount(callback: HydrationCallback) {
   if (typeof window !== "undefined") {
     async function CombinedCallback() {
       const cleaner = await callback()
-      if (cleaner) {
-        cleanUps.push(cleaner)
-      }
+      handleClearCallback(cleaner)
       window.removeEventListener("load", CombinedCallback)
     }
     window.addEventListener("load", CombinedCallback)
@@ -23,9 +27,15 @@ export async function clearHydrations() {
   return
 }
 
-export function onMount(callback: HydrationCallback) {
+export function beforeMount(callback: HydrationCallback) {
+
   if (typeof window !== "undefined") {
-    callback()
+    const cleaner = callback()
+    if (cleaner instanceof Promise) {
+      cleaner.then(r => handleClearCallback(r))
+    } else {
+      handleClearCallback(cleaner)
+    }
   }
 }
 
