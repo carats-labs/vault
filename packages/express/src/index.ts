@@ -64,22 +64,18 @@ router.all('*splat', async (req: Request, res: Response) => {
       ? templateHtml
       : await vite.transformIndexHtml(url, readFileSync(join(clientBase, 'index.html'), 'utf-8'))
 
-    const { head = '', html = '' } = await render(caratsRequest)
+    const { head = '', html = '', status = 200 } = await render(caratsRequest)
 
     const result = template
       .replace(`<!--app-head-->`, head)
       .replace(`<!--app-html-->`, html)
 
-    res.status(200).set({ 'Content-Type': 'text/html' }).send(result)
+    res.status(status).set({ 'Content-Type': 'text/html' }).send(result)
   }
   catch (e) {
-    if (e instanceof Error) {
-      console.error(e.stack)
-      res.status(500).end(e.stack)
-    } else {
-      console.error(e)
-      res.status(500).end(JSON.stringify(e))
-    }
+    const detail = e instanceof Error ? e.stack : JSON.stringify(e)
+    console.error(detail)
+    res.status(500).end(isProduction ? 'Internal Server Error' : detail)
   }
 })
 

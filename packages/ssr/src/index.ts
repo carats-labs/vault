@@ -4,7 +4,7 @@ import { parseUrl } from '@carats/url';
 import { transpile } from 'jjsx';
 
 export interface CaratsServerEntry {
-  render: (req: CaratsRequest<never>) => Promise<{ html?: string; head?: string }>
+  render: (req: CaratsRequest<never>) => Promise<{ html?: string; head?: string; status?: number }>
   getServerProps: <T = any>(req: CaratsRequest<never>) => Promise<T> | T
   facets: Facets
   culets: Record<string, Culet>
@@ -30,31 +30,34 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
   }
 
   async function render(req: CaratsRequest<never>) {
-    const pageComponentResult = getPageComponent.call(facets, req.url)
-    const { path } = parseUrl(req.url);
-    const props = await getServerProps(req, pageComponentResult)
-    const component = pageComponentResult.component
-    const element = await component.call(component, props)
-    const html = await transpile(Promise.resolve(element))
-    let head = '$carats_state$carats_dynamic'
-    const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
-    let $carats_dynamic = ''
-    if (component.head) {
-      $carats_dynamic = await transpile(Promise.resolve(component.head))
-    }
-    head = head
-      .replace('$carats_state', $carats_state)
-      .replace('$carats_dynamic', $carats_dynamic)
     try {
+      const pageComponentResult = getPageComponent.call(facets, req.url)
+      const { path } = parseUrl(req.url);
+      const props = await getServerProps(req, pageComponentResult)
+      const component = pageComponentResult.component
+      const element = await component.call(component, props)
+      const html = await transpile(Promise.resolve(element))
+      let head = '$carats_state$carats_dynamic'
+      const $carats_state = `<script>window.carats=${JSON.stringify({ ssp: { for: path, data: props } })}</script>`
+      let $carats_dynamic = ''
+      if (component.head) {
+        $carats_dynamic = await transpile(Promise.resolve(component.head))
+      }
+      head = head
+        .replace('$carats_state', $carats_state)
+        .replace('$carats_dynamic', $carats_dynamic)
       return {
         html,
-        head
+        head,
+        status: component.status ?? 200
       }
     } catch (error) {
+      console.error(error)
       const errorPage = facets.suspense.error
       return {
         html: await transpile(Promise.resolve(errorPage(error as Error))),
-        head
+        head: '',
+        status: 500
       }
     }
   }
