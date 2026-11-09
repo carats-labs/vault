@@ -34,7 +34,7 @@ export async function clientRender() {
     const loadingComponent = component.frame ?? _facets.suspense.loading
     if (component.burnished && (window.carats.ssp.for !== url || component.recast)) {
       loading = true
-      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent()))
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent.call(loadingComponent)))
       const sspUrl = `/culet${url}`
       props = await fetch(sspUrl).then(r => r.json())
       window.carats.ssp.data = props
@@ -49,7 +49,7 @@ export async function clientRender() {
     let element = component.call(component, props)
     if (element instanceof Promise && !loading) {
       loading = true
-      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent()))
+      document.getElementById("app")!.innerHTML = await transpile(Promise.resolve(loadingComponent.call(loadingComponent)))
     }
     element = await element
     afterMount(async () => {
@@ -75,7 +75,8 @@ export async function clientRender() {
     const html = await transpile(Promise.resolve(element))
     document.getElementById("app")!.innerHTML = html
   } catch (error) {
-    const errorElement = await transpile(Promise.resolve(_facets.suspense.error(error as Error)))
+    const errorPage = _facets.suspense.error;
+    const errorElement = await transpile(Promise.resolve(errorPage.call(errorPage, error as Error)))
     document.getElementById("app")!.innerHTML = errorElement
   } finally {
     clearTimeout(loaderTimer)

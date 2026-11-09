@@ -55,7 +55,7 @@ export function defineServerEntry(facets: Facets): CaratsServerEntry {
       console.error(error)
       const errorPage = facets.suspense.error
       return {
-        html: await transpile(Promise.resolve(errorPage(error as Error))),
+        html: await transpile(Promise.resolve(errorPage.call(errorPage, error as Error))),
         head: '',
         status: 500
       }
