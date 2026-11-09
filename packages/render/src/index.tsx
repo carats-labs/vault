@@ -7,7 +7,7 @@ export interface CaratsComponent<T = any> extends CaratsFunction<T> {
   head?: JSX.Element
   burnished?: boolean
   recast?: boolean
-  frame?: () => JSX.Element
+  frame?: CaratsComponent
   status?: number
 }
 
@@ -17,8 +17,8 @@ export interface Facets {
   inAppRouting?: boolean
   routes: Record<string, CaratsComponent>
   suspense: {
-    loading: () => JSX.Element
-    error: (error: Error) => JSX.Element
+    loading: CaratsComponent
+    error: CaratsComponent<Error>
     notFound: CaratsComponent
   }
 }
